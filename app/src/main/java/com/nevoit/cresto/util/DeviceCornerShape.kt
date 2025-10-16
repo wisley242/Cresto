@@ -28,7 +28,6 @@ fun deviceCornerShape(
         }
     }
     return remember(view) {
-        val insets = view.rootWindowInsets
         val topLeft = getCornerRadius(RoundedCorner.POSITION_TOP_LEFT, topLeft)
         val topRight = getCornerRadius(RoundedCorner.POSITION_TOP_RIGHT, topRight)
         val bottomRight = getCornerRadius(RoundedCorner.POSITION_BOTTOM_RIGHT, bottomRight)
