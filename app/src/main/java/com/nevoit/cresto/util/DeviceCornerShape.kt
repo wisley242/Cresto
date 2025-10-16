@@ -10,7 +10,13 @@ import com.kyant.capsule.AbsoluteContinuousRoundedRectangle
 import com.kyant.capsule.concentricInset
 
 @Composable
-fun deviceCornerShape(padding: Dp = 0.dp, topLeft: Boolean = true, topRight: Boolean = true, bottomRight: Boolean = true, bottomLeft: Boolean = true): AbsoluteContinuousRoundedRectangle {
+fun deviceCornerShape(
+    padding: Dp = 0.dp,
+    topLeft: Boolean = true,
+    topRight: Boolean = true,
+    bottomRight: Boolean = true,
+    bottomLeft: Boolean = true
+): AbsoluteContinuousRoundedRectangle {
     val view = LocalView.current
     fun getCornerRadius(position: Int, status: Boolean): Float {
         val insets = view.rootWindowInsets
@@ -18,7 +24,7 @@ fun deviceCornerShape(padding: Dp = 0.dp, topLeft: Boolean = true, topRight: Boo
             0f
         } else {
             val radius = insets.getRoundedCorner(position)?.radius?.toFloat()
-            if (radius == null || radius <= 16f) 16f else radius
+            if (radius == null || radius <= 64f) 64f else radius
         }
     }
     return remember(view) {
