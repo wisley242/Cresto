@@ -4,12 +4,18 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.LocalOverscrollFactory
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import com.nevoit.cresto.ui.TodoScreen
+import com.nevoit.cresto.ui.overscroll.OffsetOverscrollFactory
 import com.nevoit.cresto.ui.theme.glasense.GlasenseTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,12 +25,24 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             GlasenseTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                val animationScope = rememberCoroutineScope()
+                val overscrollFactory = remember {
+                    OffsetOverscrollFactory(
+                        orientation = Orientation.Vertical,
+                        animationScope = animationScope,
+                    )
+                }
+
+                CompositionLocalProvider(
+                    LocalOverscrollFactory provides overscrollFactory
                 ) {
-                    // 在这里调用我们的主屏幕
-                    TodoScreen()
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        // 在这里调用我们的主屏幕
+                        TodoScreen()
+                    }
                 }
             }
         }

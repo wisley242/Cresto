@@ -58,13 +58,11 @@ fun TodoScreen() {
                 .hazeSource(hazeState, 0f)
                 .background(color = MaterialTheme.colorScheme.background)
         ) {
-            AppNavHost(navController = navController)
+            AppNavHost(
+                navController = navController
+            )
         }
-        // 1. 动态内容区域 (NavHost)
 
-
-        // 2. 静态导航栏 (位于顶层)
-        // 使用 .align(Alignment.TopCenter) 确保它在顶部
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -156,8 +154,11 @@ fun TodoScreen() {
 
 }
 
+
 @Composable
-fun AppNavHost(navController: NavHostController) {
+fun AppNavHost(
+    navController: NavHostController
+) {
     val fadeDuration = 0
     NavHost(
         navController = navController,

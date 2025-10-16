@@ -12,6 +12,8 @@ capsule = "2.1.0"
 animation = "1.9.3"
 material3 = "1.4.0"
 foundation = "1.9.3"
+ui = "1.9.3"
+runtime = "1.9.3"
 
 
 [libraries]
@@ -33,6 +35,8 @@ capsule = { group = "com.github.Kyant0", name = "Capsule", version.ref = "capsul
 androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

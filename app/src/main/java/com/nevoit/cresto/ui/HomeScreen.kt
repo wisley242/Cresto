@@ -78,22 +78,24 @@ import com.nevoit.cresto.CrestoApplication
 import com.nevoit.cresto.R
 import com.nevoit.cresto.data.TodoItem
 import com.nevoit.cresto.ui.components.HorizontalFlagPicker
+import com.nevoit.cresto.ui.components.HorizontalPresetDatePicker
 import com.nevoit.cresto.ui.theme.glasense.AppButtonColors
 import com.nevoit.cresto.ui.theme.glasense.getFlagColor
 import com.nevoit.cresto.util.deviceCornerShape
 import com.nevoit.cresto.util.g2
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
-    // 1. 获取 ViewModel
+    val scope = rememberCoroutineScope()
+
     val application = LocalContext.current.applicationContext as CrestoApplication
     val viewModel: TodoViewModel = viewModel(
         factory = TodoViewModelFactory(application.repository)
     )
 
-    // 2. 订阅 ViewModel 中的状态
     val todoList by viewModel.allTodos.collectAsStateWithLifecycle()
 
     var showSheet by remember { mutableStateOf(false) }
@@ -102,7 +104,7 @@ fun HomeScreen() {
         skipPartiallyExpanded = true
     )
 
-    val scope = rememberCoroutineScope()
+
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -167,19 +169,22 @@ fun HomeScreen() {
             shape = deviceCornerShape(bottomLeft = false, bottomRight = false)
         ) {
             AddTodoSheet(
-                onAddClick = { title, flagIndex ->
-                    // 使用协程来先关闭 sheet，再执行插入，体验更流畅
+                onAddClick = { title, flagIndex, finalDate ->
                     scope.launch {
                         sheetState.hide()
                     }.invokeOnCompletion {
-                        // 动画完成后，再彻底隐藏 Composable
                         if (!sheetState.isVisible) {
                             showSheet = false
                         }
-                        // 最后，调用 viewModel 插入数据
-                        viewModel.insert(TodoItem(title = title, flag = flagIndex))
+                        viewModel.insert(
+                            TodoItem(
+                                title = title,
+                                flag = flagIndex,
+                                dueDate = finalDate
+                            )
+                        )
                     }
-                }
+                },
             )
         }
     }
@@ -207,6 +212,10 @@ fun TodoItemRow(
             text = item.title,
             modifier = Modifier.weight(1f),
             textDecoration = if (item.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+        )
+        Text(
+            text = if (item.dueDate != null) item.dueDate.toString() else "",
+            modifier = Modifier.weight(1f),
         )
         Box(
             modifier = Modifier
@@ -237,17 +246,23 @@ enum class SelectedButton {
 }
 
 @Composable
-fun AddTodoSheet(onAddClick: (String, Int) -> Unit) {
+fun AddTodoSheet(
+    onAddClick: (String, Int, LocalDate?) -> Unit
+) {
     var selectedButton by remember { mutableStateOf(SelectedButton.NONE) }
     val state = rememberTextFieldState()
     val focusRequester = remember { FocusRequester() }
     var selectedIndex by remember { mutableIntStateOf(0) }
+    var finalDate by remember { mutableStateOf<LocalDate?>(null) }
     val onAdd = {
         val text = state.text as String
+        val dueDate = LocalDate.now()
         if (text.isNotBlank()) {
-            onAddClick(text, selectedIndex)
+            onAddClick(text, selectedIndex, finalDate)
         }
     }
+
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -298,15 +313,11 @@ fun AddTodoSheet(onAddClick: (String, Int) -> Unit) {
         ) {
             val totalWidth = this.maxWidth
 
-            // 2. 定义固定尺寸和计算展开后的尺寸
             val collapsedSize = 48.dp
             val spacerSize = 12.dp
-            // 展开后的宽度 = 总宽度 - 2个收缩的按钮 - 1个固定的确认按钮 - 3个间隔
             val expandedWidth = totalWidth - (collapsedSize * 2) - 48.dp - (spacerSize * 3)
-            // “无选中”状态下，每个按钮的平均宽度
             val defaultWidth = (totalWidth - 48.dp - (spacerSize * 3)) / 3
 
-            // 3. 为每个按钮的宽度创建动画状态
             val dueDateWidth by animateDpAsState(
                 targetValue = when (selectedButton) {
                     SelectedButton.DUE_DATE -> expandedWidth
@@ -355,9 +366,9 @@ fun AddTodoSheet(onAddClick: (String, Int) -> Unit) {
                         shape = ContinuousCapsule(g2),
                         onClick = {
                             selectedButton = if (selectedButton == SelectedButton.DUE_DATE) {
-                                SelectedButton.NONE // 如果再次点击自己，则恢复原样
+                                SelectedButton.NONE
                             } else {
-                                SelectedButton.DUE_DATE // 否则就选中自己
+                                SelectedButton.DUE_DATE
                             }
                         },
                         modifier = Modifier
@@ -366,11 +377,50 @@ fun AddTodoSheet(onAddClick: (String, Int) -> Unit) {
                         colors = AppButtonColors.secondary(),
                         contentPadding = PaddingValues(0.dp)
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_calendar),
-                            contentDescription = "Due Date",
-                            modifier = Modifier.width(28.dp)
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            with(this@Button) {
+                                AnimatedVisibility(
+                                    visible = selectedButton != SelectedButton.DUE_DATE,
+                                    enter = fadeIn(animationSpec = tween(delayMillis = 100)) + scaleIn(
+                                        animationSpec = tween(delayMillis = 100),
+                                        initialScale = 0.9f
+                                    ),
+                                    exit = fadeOut(animationSpec = tween(durationMillis = 100)) + scaleOut(
+                                        animationSpec = tween(delayMillis = 100),
+                                        targetScale = 0.9f
+                                    )
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_calendar),
+                                        contentDescription = "Due Date",
+                                        modifier = Modifier.width(28.dp)
+                                    )
+                                }
+                                AnimatedVisibility(
+                                    visible = selectedButton == SelectedButton.DUE_DATE,
+                                    enter = fadeIn(animationSpec = tween(delayMillis = 100)) + scaleIn(
+                                        animationSpec = tween(delayMillis = 100),
+                                        initialScale = 0.9f
+                                    ),
+                                    exit = fadeOut(animationSpec = tween(durationMillis = 100)) + scaleOut(
+                                        animationSpec = tween(delayMillis = 100),
+                                        targetScale = 0.9f
+                                    )
+                                ) {
+                                    HorizontalPresetDatePicker(
+                                        initialDate = finalDate,
+                                        onDateSelected = {
+                                            finalDate = it
+                                            selectedButton = SelectedButton.NONE
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Button(
@@ -378,9 +428,9 @@ fun AddTodoSheet(onAddClick: (String, Int) -> Unit) {
                         shape = ContinuousCapsule(g2),
                         onClick = {
                             selectedButton = if (selectedButton == SelectedButton.FLAG) {
-                                SelectedButton.NONE // 如果再次点击自己，则恢复原样
+                                SelectedButton.NONE
                             } else {
-                                SelectedButton.FLAG // 否则就选中自己
+                                SelectedButton.FLAG
                             }
                         },
                         modifier = Modifier
@@ -442,9 +492,9 @@ fun AddTodoSheet(onAddClick: (String, Int) -> Unit) {
                         shape = ContinuousCapsule(g2),
                         onClick = {
                             selectedButton = if (selectedButton == SelectedButton.HASHTAG) {
-                                SelectedButton.NONE // 如果再次点击自己，则恢复原样
+                                SelectedButton.NONE
                             } else {
-                                SelectedButton.HASHTAG // 否则就选中自己
+                                SelectedButton.HASHTAG
                             }
                         },
                         modifier = Modifier
