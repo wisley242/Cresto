@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.nevoit.cresto.ui.theme.glasense.Blue500
 import com.nevoit.cresto.ui.theme.glasense.Gray500
@@ -102,6 +103,12 @@ fun ColorCircle(
 
     var isPressed by remember { mutableStateOf(false) }
 
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+
+    val strokeColor =
+        if (onSurfaceColor == Color.Black) onSurfaceColor.copy(alpha = 0.2F) else onSurfaceColor.copy(
+            alpha = 0.4F
+        )
     LaunchedEffect(interactionSource) {
         interactionSource.interactions.collect { interaction ->
             when (interaction) {
@@ -144,6 +151,7 @@ fun ColorCircle(
     }
 
     Box(
+
         modifier = Modifier
             .graphicsLayer {
                 scaleX = scale.value
@@ -162,7 +170,7 @@ fun ColorCircle(
                 if (isSelected || isPressed) {
                     Modifier.drawBehind {
                         drawCircle(
-                            color = Color.Black.copy(alpha = 0.2f),
+                            color = strokeColor,
                             style = Stroke(width = 4.dp.toPx())
                         )
                     }
@@ -373,7 +381,8 @@ private fun SelectorBox(
         Text(
             text = text,
             color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
         )
     }
 }
@@ -432,7 +441,8 @@ private fun DateSelectorBox(
         Text(
             text = text,
             color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
         )
     }
 }

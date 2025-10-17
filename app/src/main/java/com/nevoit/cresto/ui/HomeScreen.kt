@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,22 +28,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,7 +45,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -68,7 +57,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -79,10 +68,13 @@ import com.nevoit.cresto.R
 import com.nevoit.cresto.data.TodoItem
 import com.nevoit.cresto.ui.components.HorizontalFlagPicker
 import com.nevoit.cresto.ui.components.HorizontalPresetDatePicker
+import com.nevoit.cresto.ui.components.TodoItemRow
 import com.nevoit.cresto.ui.theme.glasense.AppButtonColors
+import com.nevoit.cresto.ui.theme.glasense.CalculatedColor
 import com.nevoit.cresto.ui.theme.glasense.getFlagColor
 import com.nevoit.cresto.util.deviceCornerShape
 import com.nevoit.cresto.util.g2
+import com.nevoit.cresto.util.getStatusBarHeight
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -104,33 +96,24 @@ fun HomeScreen() {
         skipPartiallyExpanded = true
     )
 
+    val statusBarHeight = getStatusBarHeight()
 
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(CalculatedColor.hierarchicalBackgroundColor)
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        floatingActionButton = {
-            FloatingActionButton(
-                shape = ContinuousRoundedRectangle(16.dp, g2),
-                onClick = { showSheet = true },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.padding(horizontal = 0.dp, vertical = 136.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Task")
-            }
-        }
-    ) { paddingValues ->
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
         ) {
 
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(0.dp)
-                    .background(color = MaterialTheme.colorScheme.background),
+                    .background(CalculatedColor.hierarchicalBackgroundColor),
                 contentPadding = PaddingValues(
                     start = 12.dp,
                     top = 0.dp,
@@ -139,26 +122,70 @@ fun HomeScreen() {
                 )
             ) {
                 item {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                "All Todos",
-                                style = MaterialTheme.typography.headlineLarge,
-                                modifier = Modifier.padding(all = 0.dp)
-                            )
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.background,
-                            titleContentColor = MaterialTheme.colorScheme.onBackground
-                        ),
-                        windowInsets = WindowInsets(
-                            left = 0.dp,
-                            top = 100.dp,
-                            right = 0.dp,
-                            bottom = 4.dp
-                        ),
-                    )
+                    // Header
+                    Box(
+                        modifier = Modifier
+                            .padding(top = statusBarHeight)
+                            .height(128.dp + statusBarHeight)
+                            .fillMaxWidth()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .height(48.dp)
+                                .fillMaxWidth()
+                                .align(Alignment.TopCenter)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .height(48.dp)
+                                    .width(48.dp)
+                                    .background(
+                                        CalculatedColor.onSurfaceContainer,
+                                        shape = CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_rank),
+                                    contentDescription = "Due Date",
+                                    modifier = Modifier.width(32.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        Text(
+                            "All Todos",
+                            style = MaterialTheme.typography.headlineLarge,
+                            modifier = Modifier
+                                .padding(start = 12.dp, bottom = 16.dp)
+                                .align(Alignment.BottomStart)
+                        )
+                    }
                 }
+                item {
+                    Box(
+                        modifier = Modifier
+                            .height(72.dp)
+                            .fillMaxWidth()
+                            .background(
+                                color = CalculatedColor.hierarchicalSurfaceColor,
+                                shape = ContinuousRoundedRectangle(12.dp, g2)
+                            )
+                            .clickable() {
+                                showSheet = true
+                            }
+                    ) {
+                        Text(
+                            "Add New Task",
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .padding(horizontal = 12.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
                 items(items = todoList, key = { it.id }) { item ->
                     TodoItemRow(
                         item = item,
@@ -169,7 +196,7 @@ fun HomeScreen() {
                             viewModel.delete(item)
                         }
                     )
-                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
         }
@@ -199,56 +226,6 @@ fun HomeScreen() {
                         )
                     }
                 },
-            )
-        }
-    }
-}
-
-@Composable
-fun TodoItemRow(
-    item: TodoItem,
-    onCheckedChange: (Boolean) -> Unit,
-    onDeleteClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(
-            checked = item.isCompleted,
-            onCheckedChange = onCheckedChange
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Text(
-            text = item.title,
-            modifier = Modifier.weight(1f),
-            textDecoration = if (item.isCompleted) TextDecoration.LineThrough else TextDecoration.None
-        )
-        Text(
-            text = if (item.dueDate != null) item.dueDate.toString() else "",
-            modifier = Modifier.weight(1f),
-        )
-        Box(
-            modifier = Modifier
-                .clip(CircleShape)
-                .background(getFlagColor(item.flag))
-                .width(8.dp)
-                .height(8.dp)
-        )
-        Box(
-            modifier = Modifier
-                .height(32.dp)
-                .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f))
-        ) {
-            item.hashtag?.let { Text(text = it, color = MaterialTheme.colorScheme.onBackground) }
-        }
-        IconButton(onClick = onDeleteClick) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "Delete Task"
             )
         }
     }
@@ -286,7 +263,7 @@ fun AddTodoSheet(
         Text(
             "New Task",
             style = MaterialTheme.typography.titleLarge,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Start,
+            textAlign = TextAlign.Start,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp, 0.dp)
@@ -329,8 +306,8 @@ fun AddTodoSheet(
 
             val collapsedSize = 48.dp
             val spacerSize = 12.dp
-            val expandedWidth = totalWidth - (collapsedSize * 2) - 48.dp - (spacerSize * 3)
-            val defaultWidth = (totalWidth - 48.dp - (spacerSize * 3)) / 3
+            val expandedWidth = totalWidth - (collapsedSize * 1) - 48.dp - (spacerSize * 2)
+            val defaultWidth = (totalWidth - 48.dp - (spacerSize * 2)) / 2
 
             val dueDateWidth by animateDpAsState(
                 targetValue = when (selectedButton) {
@@ -469,10 +446,20 @@ fun AddTodoSheet(
                                         targetScale = 0.9f
                                     )
                                 ) {
+                                    val displayColor = getFlagColor(selectedIndex)
                                     Icon(
-                                        painter = painterResource(id = R.drawable.ic_flag),
+                                        painter = if (displayColor == Color.Transparent) {
+                                            painterResource(id = R.drawable.ic_flag)
+                                        } else {
+                                            painterResource(id = R.drawable.ic_flag_fill)
+                                        },
                                         contentDescription = "Flag",
-                                        modifier = Modifier.width(28.dp)
+                                        modifier = Modifier.width(28.dp),
+                                        tint = if (displayColor == Color.Transparent) {
+                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5F)
+                                        } else {
+                                            displayColor
+                                        }
                                     )
                                 }
                                 AnimatedVisibility(
@@ -500,7 +487,7 @@ fun AddTodoSheet(
                         }
 
                     }
-                    Spacer(modifier = Modifier.width(12.dp))
+                    /*pacer(modifier = Modifier.width(12.dp))
                     Button(
                         enabled = true,
                         shape = ContinuousCapsule(g2),
@@ -522,7 +509,7 @@ fun AddTodoSheet(
                             contentDescription = "Tag",
                             modifier = Modifier.width(28.dp)
                         )
-                    }
+                    }*/
 
                 }
                 Button(
