@@ -108,15 +108,6 @@ fun HomeScreen() {
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            TopAppBar(
-                title = { Text("To-Do") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                )
-            )
-        },
         floatingActionButton = {
             FloatingActionButton(
                 shape = ContinuousRoundedRectangle(16.dp, g2),
@@ -134,18 +125,40 @@ fun HomeScreen() {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(0.dp)
                     .background(color = MaterialTheme.colorScheme.background),
                 contentPadding = PaddingValues(
-                    start = 0.dp,
+                    start = 12.dp,
                     top = 0.dp,
-                    end = 0.dp,
+                    end = 12.dp,
                     bottom = 136.dp
                 )
             ) {
+                item {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                "All Todos",
+                                style = MaterialTheme.typography.headlineLarge,
+                                modifier = Modifier.padding(all = 0.dp)
+                            )
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.background,
+                            titleContentColor = MaterialTheme.colorScheme.onBackground
+                        ),
+                        windowInsets = WindowInsets(
+                            left = 0.dp,
+                            top = 100.dp,
+                            right = 0.dp,
+                            bottom = 4.dp
+                        ),
+                    )
+                }
                 items(items = todoList, key = { it.id }) { item ->
                     TodoItemRow(
                         item = item,
@@ -166,7 +179,8 @@ fun HomeScreen() {
         ModalBottomSheet(
             onDismissRequest = { showSheet = false },
             sheetState = sheetState,
-            shape = deviceCornerShape(bottomLeft = false, bottomRight = false)
+            shape = deviceCornerShape(bottomLeft = false, bottomRight = false),
+            containerColor = MaterialTheme.colorScheme.surface
         ) {
             AddTodoSheet(
                 onAddClick = { title, flagIndex, finalDate ->

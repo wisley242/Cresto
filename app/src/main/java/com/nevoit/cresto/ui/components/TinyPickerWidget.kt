@@ -85,6 +85,7 @@ fun HorizontalFlagPicker(
                     onIndexSelected(index)
                 }
             )
+
         }
     }
 }
@@ -392,28 +393,9 @@ private fun DateSelectorBox(
     LaunchedEffect(interactionSource) {
         interactionSource.interactions.collect { interaction ->
             when (interaction) {
-                is PressInteraction.Press -> {
-                    isPressed = true
-                    scale.animateTo(
-                        targetValue = 1.2f,
-                        animationSpec = tween(100)
-                    )
-                }
-
                 is PressInteraction.Release -> {
                     isPressed = true
-                    coroutineScope {
-                        launch {
-                            scale.animateTo(
-                                targetValue = 0.8f,
-                                animationSpec = tween(300)
-                            )
-                        }
-                        launch {
-                            delay(100)
-                            onClick()
-                        }
-                    }
+                    onClick()
                 }
 
                 is PressInteraction.Cancel -> {
