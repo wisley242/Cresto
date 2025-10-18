@@ -1,6 +1,10 @@
 package com.nevoit.cresto.ui
 
+import android.graphics.RuntimeShader
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -37,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -45,16 +50,23 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -68,16 +80,27 @@ import com.nevoit.cresto.R
 import com.nevoit.cresto.data.TodoItem
 import com.nevoit.cresto.ui.components.HorizontalFlagPicker
 import com.nevoit.cresto.ui.components.HorizontalPresetDatePicker
+import com.nevoit.cresto.ui.components.NAnimatedVisibility
 import com.nevoit.cresto.ui.components.TodoItemRow
+import com.nevoit.cresto.ui.components.myFadeIn
+import com.nevoit.cresto.ui.components.myFadeOut
+import com.nevoit.cresto.ui.components.myScaleIn
+import com.nevoit.cresto.ui.components.myScaleOut
+import com.nevoit.cresto.ui.gaussiangradient.GAUSSIAN_COLOR_INTERPOLATION_SHADER
 import com.nevoit.cresto.ui.theme.glasense.AppButtonColors
 import com.nevoit.cresto.ui.theme.glasense.CalculatedColor
 import com.nevoit.cresto.ui.theme.glasense.getFlagColor
+import com.nevoit.cresto.ui.theme.glasense.linearGradientMaskT2B50
 import com.nevoit.cresto.util.deviceCornerShape
 import com.nevoit.cresto.util.g2
 import com.nevoit.cresto.util.getStatusBarHeight
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
@@ -98,106 +121,225 @@ fun HomeScreen() {
 
     val statusBarHeight = getStatusBarHeight()
 
+    val thresholdPx = with(LocalDensity.current) { (statusBarHeight + 24.dp).toPx() }
+
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                viewModel.totalScrollPx -= consumed.y
+                return Offset.Zero
+            }
+        }
+    }
+
+    val isSmallTitleVisible by remember {
+        derivedStateOf { viewModel.totalScrollPx > thresholdPx }
+    }
+
+    val hazeState = rememberHazeState()
+
+    val colorMode = if (MaterialTheme.colorScheme.background == Color.White) 1 else 0
+
+    val onSurfaceContainer = CalculatedColor.onSurfaceContainer
+
+    val shader = remember { RuntimeShader(GAUSSIAN_COLOR_INTERPOLATION_SHADER) }
+
+    val brush = remember { ShaderBrush(shader) }
+
+    val surfaceColor = CalculatedColor.hierarchicalBackgroundColor
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(CalculatedColor.hierarchicalBackgroundColor)
+            .nestedScroll(nestedScrollConnection)
 
     ) {
+        LazyColumn(
+            modifier = Modifier
+                .hazeSource(hazeState, 0f)
+                .fillMaxSize()
+                .padding(0.dp)
+                .background(CalculatedColor.hierarchicalBackgroundColor),
+            contentPadding = PaddingValues(
+                start = 12.dp,
+                top = 0.dp,
+                end = 12.dp,
+                bottom = 136.dp
+            )
+        ) {
+            item {
+                // Header
+                Box(
+                    modifier = Modifier
+                        .padding(top = statusBarHeight)
+                        .height(128.dp + statusBarHeight)
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        "All Todos",
+                        style = MaterialTheme.typography.headlineLarge,
+                        modifier = Modifier
+                            .padding(start = 12.dp, bottom = 16.dp)
+                            .align(Alignment.BottomStart)
+                    )
+                }
+            }
+
+            items(items = todoList, key = { it.id }) { item ->
+                TodoItemRow(
+                    item = item,
+                    onCheckedChange = { isChecked ->
+                        viewModel.update(item.copy(isCompleted = isChecked))
+                    },
+                    onDeleteClick = {
+                        viewModel.delete(item)
+                    }
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+        }
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .height(48.dp + statusBarHeight + 48.dp)
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+
+
         ) {
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(0.dp)
-                    .background(CalculatedColor.hierarchicalBackgroundColor),
-                contentPadding = PaddingValues(
-                    start = 12.dp,
-                    top = 0.dp,
-                    end = 12.dp,
-                    bottom = 136.dp
-                )
+            NAnimatedVisibility(
+                visible = isSmallTitleVisible,
+                enter = myFadeIn(),
+                exit = myFadeOut()
             ) {
-                item {
-                    // Header
-                    Box(
-                        modifier = Modifier
-                            .padding(top = statusBarHeight)
-                            .height(128.dp + statusBarHeight)
-                            .fillMaxWidth()
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .height(48.dp)
-                                .fillMaxWidth()
-                                .align(Alignment.TopCenter)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .height(48.dp)
-                                    .width(48.dp)
-                                    .background(
-                                        CalculatedColor.onSurfaceContainer,
-                                        shape = CircleShape
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_rank),
-                                    contentDescription = "Due Date",
-                                    modifier = Modifier.width(32.dp),
-                                    tint = MaterialTheme.colorScheme.primary
+                Box(
+                    modifier = Modifier
+                        .height(48.dp + statusBarHeight + 48.dp)
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .hazeEffect(hazeState) {
+                            mask = linearGradientMaskT2B50
+                            blurRadius = 2.dp
+                            noiseFactor = 0f
+                        }
+                        .drawBehind() {
+                            drawRect(brush = brush.apply {
+                                shader.setFloatUniform(
+                                    "iResolution",
+                                    this@drawBehind.size.width,
+                                    this@drawBehind.size.height
                                 )
-                            }
+                                shader.setFloatUniform(
+                                    "startColor",
+                                    surfaceColor.red,
+                                    surfaceColor.green,
+                                    surfaceColor.blue,
+                                    1f
+                                )
+                                shader.setFloatUniform(
+                                    "centerColor",
+                                    surfaceColor.red,
+                                    surfaceColor.green,
+                                    surfaceColor.blue,
+                                    0f
+                                )
+                                shader.setFloatUniform(
+                                    "endColor",
+                                    surfaceColor.red,
+                                    surfaceColor.green,
+                                    surfaceColor.blue,
+                                    0f
+                                )
+                                shader.setFloatUniform("mean", 0.7f)
+                                shader.setFloatUniform("sigma", 0.2f)
+                                shader.setFloatUniform("horizontal", 0f)
+                            }, alpha = 0.5f)
                         }
-                        Text(
-                            "All Todos",
-                            style = MaterialTheme.typography.headlineLarge,
-                            modifier = Modifier
-                                .padding(start = 12.dp, bottom = 16.dp)
-                                .align(Alignment.BottomStart)
-                        )
-                    }
-                }
-                item {
-                    Box(
-                        modifier = Modifier
-                            .height(72.dp)
-                            .fillMaxWidth()
-                            .background(
-                                color = CalculatedColor.hierarchicalSurfaceColor,
-                                shape = ContinuousRoundedRectangle(12.dp, g2)
-                            )
-                            .clickable() {
-                                showSheet = true
-                            }
-                    ) {
-                        Text(
-                            "Add New Task",
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier
-                                .align(Alignment.CenterStart)
-                                .padding(horizontal = 12.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
 
-                items(items = todoList, key = { it.id }) { item ->
-                    TodoItemRow(
-                        item = item,
-                        onCheckedChange = { isChecked ->
-                            viewModel.update(item.copy(isCompleted = isChecked))
-                        },
-                        onDeleteClick = {
-                            viewModel.delete(item)
-                        }
+
+                ) {}
+            }
+
+
+            Row(
+                modifier = Modifier
+                    .padding(top = statusBarHeight, start = 12.dp)
+                    .height(48.dp)
+                    .background(
+                        onSurfaceContainer,
+                        shape = ContinuousCapsule
+                    ),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .height(48.dp)
+                        .width(48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_magnifying_glass),
+                        contentDescription = "Due Date",
+                        modifier = Modifier.width(32.dp),
+                        tint = MaterialTheme.colorScheme.primary
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
                 }
+                Box(
+                    modifier = Modifier
+                        .height(48.dp)
+                        .width(48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_funnel),
+                        contentDescription = "Due Date",
+                        modifier = Modifier.width(32.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .padding(top = statusBarHeight, end = 12.dp)
+                    .clip(CircleShape)
+                    .height(48.dp)
+                    .width(48.dp)
+                    .background(
+                        onSurfaceContainer,
+                        shape = CircleShape
+                    )
+                    .align(Alignment.TopEnd)
+                    .clickable() {
+                        showSheet = true
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_add_large),
+                    contentDescription = "Due Date",
+                    modifier = Modifier.width(32.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            NAnimatedVisibility(
+                visible = isSmallTitleVisible,
+                enter = myScaleIn(
+                    tween(200, 0, CubicBezierEasing(0.2f, 0.2f, 0f, 1f)),
+                    0.9f
+                ) + myFadeIn(tween(100)),
+                exit = myScaleOut(
+                    tween(200, 0, CubicBezierEasing(0.2f, 0.2f, 0f, 1f)),
+                    0.9f
+                ) + myFadeOut(tween(200)),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(top = statusBarHeight, bottom = 48.dp)
+            ) {
+                Text("All Todos")
             }
         }
     }

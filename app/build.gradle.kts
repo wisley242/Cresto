@@ -85,4 +85,6 @@ dependencies {
     implementation("dev.chrisbanes.haze:haze:1.6.10")
 
     implementation("androidx.navigation:navigation-compose:2.9.5")
+
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")
 }

@@ -1,4 +1,4 @@
-package com.example.yourapp // 请替换成你自己的包名
+package com.nevoit.cresto.ui.components
 
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.MutableTransitionState
@@ -10,6 +10,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -18,20 +19,16 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-// =================================================================================
-// 1. 动画数据结构 (字段名已优化)
-// =================================================================================
-
 data class Fade(val animationSpec: FiniteAnimationSpec<Float>)
 
 data class Scale(
     val animationSpec: FiniteAnimationSpec<Float>,
-    val scale: Float // 中性名称：代表不可见时的缩放值
+    val scale: Float
 )
 
 data class Blur(
     val animationSpec: FiniteAnimationSpec<Dp>,
-    val radius: Dp // 中性名称：代表不可见时的模糊半径
+    val radius: Dp
 )
 
 data class MyEnterTransition(
@@ -62,9 +59,6 @@ data class MyExitTransition(
     }
 }
 
-// =================================================================================
-// 2. 动画工厂函数 (已更新以匹配新的字段名)
-// =================================================================================
 
 fun myFadeIn(animationSpec: FiniteAnimationSpec<Float> = tween(300)): MyEnterTransition =
     MyEnterTransition(fade = Fade(animationSpec = animationSpec))
@@ -96,23 +90,27 @@ fun myBlurOut(
 ): MyExitTransition =
     MyExitTransition(blur = Blur(animationSpec = animationSpec, radius = targetRadius))
 
-// =================================================================================
-// 3. 核心组件 (已修正动画值的逻辑)
-// =================================================================================
-
-private enum class VisibilityState { Visible, Hidden }
-
 @Composable
 fun NAnimatedVisibility(
     visibleState: MutableTransitionState<Boolean>,
     modifier: Modifier = Modifier,
-    enter: MyEnterTransition = myFadeIn() + myScaleIn(),
-    exit: MyExitTransition = myFadeOut() + myScaleOut(),
+    enter: MyEnterTransition,
+    exit: MyExitTransition,
     content: @Composable () -> Unit
 ) {
     val transition = rememberTransition(visibleState, label = "MyAnimatedVisibility")
 
     if (visibleState.currentState || visibleState.targetState) {
+
+        val hiddenStateScale = when {
+            visibleState.targetState -> enter.scale?.scale ?: 1f
+            else -> exit.scale?.scale ?: 1f
+        }
+
+        val hiddenStateBlur = when {
+            visibleState.targetState -> enter.blur?.radius ?: 0.dp
+            else -> exit.blur?.radius ?: 0.dp
+        }
 
         val alpha by transition.animateFloat(
             label = "alpha",
@@ -129,11 +127,7 @@ fun NAnimatedVisibility(
                 else exit.scale?.animationSpec ?: spring()
             }
         ) { isVisible ->
-            if (isVisible) {
-                1f
-            } else {
-                enter.scale?.scale ?: exit.scale?.scale ?: 1f
-            }
+            if (isVisible) 1f else hiddenStateScale
         }
 
         val blurRadius by transition.animateDp(
@@ -143,11 +137,7 @@ fun NAnimatedVisibility(
                 else exit.blur?.animationSpec ?: tween()
             }
         ) { isVisible ->
-            if (isVisible) {
-                0.dp
-            } else {
-                enter.blur?.radius ?: exit.blur?.radius ?: 0.dp
-            }
+            if (isVisible) 0.dp else hiddenStateBlur
         }
 
         Box(
@@ -164,16 +154,19 @@ fun NAnimatedVisibility(
     }
 }
 
-// --- 便捷的 Boolean 重载版本 (无需改动) ---
 @Composable
 fun NAnimatedVisibility(
     visible: Boolean,
     modifier: Modifier = Modifier,
-    enter: MyEnterTransition = myFadeIn() + myScaleIn(),
-    exit: MyExitTransition = myFadeOut() + myScaleOut(),
+    enter: MyEnterTransition,
+    exit: MyExitTransition,
     content: @Composable () -> Unit
 ) {
-    val visibleState = remember { MutableTransitionState(initialState = visible) }
-    visibleState.targetState = visible
+    val visibleState = remember { MutableTransitionState(initialState = false) }
+
+    LaunchedEffect(visible) {
+        visibleState.targetState = visible
+    }
+
     NAnimatedVisibility(visibleState, modifier, enter, exit, content)
 }

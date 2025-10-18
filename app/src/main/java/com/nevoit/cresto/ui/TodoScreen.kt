@@ -71,10 +71,10 @@ fun TodoScreen() {
                 .hazeEffect(hazeState) {
                     progressive = HazeProgressive.verticalGradient(
                         startIntensity = 0f,
-                        endIntensity = 0.5f
+                        endIntensity = 0.3f
                     )
                 }
-                .background(brush = easingBlackGradientMask)
+                .background(brush = easingBlackGradientMask, alpha = 0.8f)
         ) {
             Row(
                 modifier = Modifier

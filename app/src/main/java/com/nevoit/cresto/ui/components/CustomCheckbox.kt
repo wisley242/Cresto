@@ -71,6 +71,12 @@ fun CustomCheckbox(
     val size = remember { Animatable(if (checked) checkedSize else uncheckedSize) }
     val alpha = remember { Animatable(if (checked) 1f else 0f) }
 
+    val primary = MaterialTheme.colorScheme.primary
+    val stroke = CalculatedColor.onSurfaceContainerBold
+
+    val interactionSource = remember { MutableInteractionSource() }
+    var animationToPlay by remember { mutableStateOf<Int?>(null) }
+
     LaunchedEffect(checked) {
         if (checked) {
             launch {
@@ -101,11 +107,7 @@ fun CustomCheckbox(
         }
     }
 
-    val primary = MaterialTheme.colorScheme.primary
-    val stroke = CalculatedColor.onSurfaceContainerBold
-    val interactionSource = remember { MutableInteractionSource() }
 
-    var animationToPlay by remember { mutableStateOf<Int?>(null) }
 
     Box(
         modifier = modifier
