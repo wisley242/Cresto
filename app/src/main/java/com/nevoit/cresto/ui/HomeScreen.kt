@@ -310,7 +310,7 @@ fun HomeScreen() {
                     .align(Alignment.Center)
                     .padding(top = statusBarHeight, bottom = 48.dp)
             ) {
-                Text("All Todos")
+                Text("All Todos", style = MaterialTheme.typography.headlineSmall)
             }
         }
     }
