@@ -15,6 +15,7 @@ foundation = "1.9.3"
 ui = "1.9.3"
 runtime = "1.9.3"
 animationGraphics = "1.9.3"
+uiGraphics = "1.9.3"
 
 
 [libraries]
@@ -39,6 +40,7 @@ androidx-compose-foundation = { group = "androidx.compose.foundation", name = "f
 androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 androidx-compose-animation-graphics = { group = "androidx.compose.animation", name = "animation-graphics", version.ref = "animationGraphics" }
+androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "uiGraphics" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

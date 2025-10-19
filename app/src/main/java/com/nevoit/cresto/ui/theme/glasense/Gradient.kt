@@ -49,16 +49,16 @@ val linearGradientMaskT2B = Brush.verticalGradient(
     )
 )
 
-val linearGradientMaskT2B50 = Brush.verticalGradient(
+val linearGradientMaskT2B70 = Brush.verticalGradient(
     colorStops = arrayOf(
-        0.5f to Color.Black,
+        0.7f to Color.Black,
         1f to Color.Black.copy(alpha = 0f)
     )
 )
 
-val linearGradientMaskB2T = Brush.verticalGradient(
+val linearGradientMaskB2T70 = Brush.verticalGradient(
     colorStops = arrayOf(
-        1f to Color.Black.copy(alpha = 0f),
-        0f to Color.Black
+        0f to Color.Black.copy(alpha = 0f),
+        0.7f to Color.Black
     )
 )

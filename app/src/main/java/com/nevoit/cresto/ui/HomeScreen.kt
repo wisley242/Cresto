@@ -1,8 +1,6 @@
 package com.nevoit.cresto.ui
 
-import android.graphics.RuntimeShader
 import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateDpAsState
@@ -56,9 +54,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Brush.Companion.verticalGradient
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -86,22 +83,22 @@ import com.nevoit.cresto.ui.components.myFadeIn
 import com.nevoit.cresto.ui.components.myFadeOut
 import com.nevoit.cresto.ui.components.myScaleIn
 import com.nevoit.cresto.ui.components.myScaleOut
-import com.nevoit.cresto.ui.gaussiangradient.GAUSSIAN_COLOR_INTERPOLATION_SHADER
 import com.nevoit.cresto.ui.theme.glasense.AppButtonColors
 import com.nevoit.cresto.ui.theme.glasense.CalculatedColor
 import com.nevoit.cresto.ui.theme.glasense.getFlagColor
-import com.nevoit.cresto.ui.theme.glasense.linearGradientMaskT2B50
+import com.nevoit.cresto.ui.theme.glasense.linearGradientMaskT2B70
 import com.nevoit.cresto.util.deviceCornerShape
 import com.nevoit.cresto.util.g2
 import com.nevoit.cresto.util.getStatusBarHeight
+import dev.chrisbanes.haze.ExperimentalHazeApi
+import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeApi::class)
 @Composable
 fun HomeScreen() {
     val scope = rememberCoroutineScope()
@@ -145,10 +142,6 @@ fun HomeScreen() {
     val colorMode = if (MaterialTheme.colorScheme.background == Color.White) 1 else 0
 
     val onSurfaceContainer = CalculatedColor.onSurfaceContainer
-
-    val shader = remember { RuntimeShader(GAUSSIAN_COLOR_INTERPOLATION_SHADER) }
-
-    val brush = remember { ShaderBrush(shader) }
 
     val surfaceColor = CalculatedColor.hierarchicalBackgroundColor
 
@@ -222,43 +215,21 @@ fun HomeScreen() {
                         .fillMaxWidth()
                         .align(Alignment.TopCenter)
                         .hazeEffect(hazeState) {
-                            mask = linearGradientMaskT2B50
                             blurRadius = 2.dp
                             noiseFactor = 0f
+                            inputScale = HazeInputScale.Fixed(0.5f)
+                            mask = linearGradientMaskT2B70
+
                         }
-                        .drawBehind() {
-                            drawRect(brush = brush.apply {
-                                shader.setFloatUniform(
-                                    "iResolution",
-                                    this@drawBehind.size.width,
-                                    this@drawBehind.size.height
-                                )
-                                shader.setFloatUniform(
-                                    "startColor",
-                                    surfaceColor.red,
-                                    surfaceColor.green,
-                                    surfaceColor.blue,
-                                    1f
-                                )
-                                shader.setFloatUniform(
-                                    "centerColor",
-                                    surfaceColor.red,
-                                    surfaceColor.green,
-                                    surfaceColor.blue,
-                                    0f
-                                )
-                                shader.setFloatUniform(
-                                    "endColor",
-                                    surfaceColor.red,
-                                    surfaceColor.green,
-                                    surfaceColor.blue,
-                                    0f
-                                )
-                                shader.setFloatUniform("mean", 0.7f)
-                                shader.setFloatUniform("sigma", 0.2f)
-                                shader.setFloatUniform("horizontal", 0f)
-                            }, alpha = 0.5f)
-                        }
+                        .then(
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Modifier.smoothGradientMask(
+                                surfaceColor.copy(alpha = 1f),
+                                surfaceColor.copy(alpha = 0f),
+                                0.5f,
+                                0.5f,
+                                0.7f
+                            ) else Modifier.smoothGradientMaskFallbackInvert(surfaceColor, 0.7f)
+                        )
 
 
                 ) {}
@@ -673,7 +644,7 @@ fun AddTodoSheet(
                                     layoutDirection = this.layoutDirection,
                                     density = this,
                                 )
-                                val gradientBrush = Brush.verticalGradient(
+                                val gradientBrush = verticalGradient(
                                     colorStops = arrayOf(
                                         0.0f to Color.White.copy(alpha = 0.2f),
                                         1.0f to Color.White.copy(alpha = 0.02f)
@@ -703,6 +674,31 @@ fun AddTodoSheet(
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
+}
+
+
+private fun Modifier.smoothGradientMaskFallbackInvert(color: Color, alpha: Float): Modifier {
+    return this.background(
+        verticalGradient(
+            colorStops = arrayOf(
+                0.0f to color.copy(alpha = 1f),
+
+                0.0361f to color.copy(alpha = 0.9f),
+                0.0811f to color.copy(alpha = 0.8f),
+                0.1343f to color.copy(alpha = 0.7f),
+                0.1953f to color.copy(alpha = 0.6f),
+                0.2637f to color.copy(alpha = 0.5f),
+                0.3387f to color.copy(alpha = 0.42f),
+                0.4201f to color.copy(alpha = 0.33f),
+                0.5072f to color.copy(alpha = 0.25f),
+                0.5995f to color.copy(alpha = 0.2f),
+                0.6966f to color.copy(alpha = 0.15f),
+                0.7979f to color.copy(alpha = 0.1f),
+                0.903f to color.copy(alpha = 0.05f),
+                1.0f to color.copy(alpha = 0.00f)
+            )
+        ), alpha = alpha
+    )
 }
 
 

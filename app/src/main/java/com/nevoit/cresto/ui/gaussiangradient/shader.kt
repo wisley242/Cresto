@@ -1,28 +1,47 @@
 package com.nevoit.cresto.ui.gaussiangradient
 
 const val GAUSSIAN_COLOR_INTERPOLATION_SHADER = """
-    uniform float2 iResolution; // 画布的尺寸 (宽, 高)
-    uniform half4 startColor;  // 起始颜色
-    uniform half4 centerColor; // 中心颜色
-    uniform half4 endColor;    // 结束颜色
-    uniform float mean;        // 中心位置 (均值 μ, 0.0-1.0)
-    uniform float sigma;       // 扩散范围 (标准差 σ)
-    uniform float horizontal;  // 0.0 for vertical, 1.0 for horizontal
+    uniform vec2 iResolution;
+    uniform half4 startColor;
+    uniform half4 endColor;
+    uniform float center;
+    uniform float sigma;
 
-    half4 main(float2 fragCoord) {
-        // 1. 根据方向，确定当前像素的归一化坐标 'p'
-        float p = horizontal > 0.5 ? (fragCoord.x / iResolution.x) : (fragCoord.y / iResolution.y);
+    float gaussian(float x, float a, float b, float c) {
+        return a * exp(-(x - b) * (x - b) / (2.0 * c * c));
+    }
+    float smoothstep_quadratic(float edge0, float edge1, float x) {
+        float t = (x - edge0) / (edge1 - edge0);
+        t = clamp(t, 0.0, 1.0);
 
-        // 2. 计算当前坐标 'p' 的高斯权重
-        // 这个权重代表了 centerColor 的影响力
-        float dist = p - mean;
-        float exponent = -0.5 * pow(dist / sigma, 2.0);
-        float gaussianInfluence = exp(exponent);
+        float result_if_true = 2.0 * t * t;
+        float result_if_false = -2.0 * t * t + 4.0 * t - 1.0;
 
-        // 3. 根据 'p' 是在中心点的左边还是右边，选择正确的“边缘颜色”
-        half4 edgeColor = p <= mean ? startColor : endColor;
+        float factor = step(0.5, t);
 
-        // 4. 使用 mix() 函数，根据高斯权重在“边缘颜色”和“中心颜色”之间进行插值
-        return mix(edgeColor, centerColor, gaussianInfluence);
+        return mix(result_if_true, result_if_false, factor);
+    }
+    float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453123);
+    }
+    half4 main(vec2 fragCoord) {
+        vec2 uv = fragCoord.xy / iResolution.xy;
+        float t = smoothstep_quadratic(center, center + sigma, uv.y);
+        
+        half3 mixed_linear = mix(startColor.rgb, endColor.rgb, half(t));
+        
+        half mixed_alpha = mix(startColor.a, endColor.a, half(t));
+        
+        half3 final_rgb = mixed_linear;
+        
+        float dither_strength = 1.0 / 255.0;
+        float dither = (hash(fragCoord.xy) - 0.5) * dither_strength;
+        
+        // final_rgb += dither;
+        mixed_alpha += half(dither) * 4.0;
+        
+        final_rgb *= mixed_alpha; 
+        
+        return clamp(half4(half3(final_rgb), mixed_alpha), 0.0, 1.0);
     }
 """
