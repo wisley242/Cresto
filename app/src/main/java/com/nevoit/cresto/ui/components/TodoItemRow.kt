@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -99,8 +100,8 @@ fun TodoItemRow(
 }
 
 enum class SwipeState {
-    IDLE,       // 静止状态
-    REVEALED    // “删除”按钮已显示
+    IDLE,
+    REVEALED
 }
 
 @Composable
@@ -111,18 +112,18 @@ fun SwipeableTodoItem(
 ) {
     val coroutineScope = rememberCoroutineScope()
     var swipeState by remember { mutableStateOf(SwipeState.IDLE) }
-    var offsetX by remember { mutableStateOf(0f) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var initialSwipeState by remember { mutableStateOf(SwipeState.IDLE) }
 
-    // 定义阈值
-    val revealButtonWidth = 80.dp
+    val revealButtonWidth = 72.dp
     val revealButtonWidthPx = with(LocalDensity.current) { revealButtonWidth.toPx() }
-    val deleteThresholdPx = revealButtonWidthPx * 2 // 滑动多远直接删除
+    val deleteThresholdPx = revealButtonWidthPx * 2
 
     val animatedOffsetX by animateFloatAsState(
         targetValue = offsetX,
         animationSpec = spring(
-            dampingRatio = 0.7f,
-            stiffness = 400f
+            dampingRatio = 0.8f,
+            stiffness = 500f
         )
     )
 
@@ -136,7 +137,7 @@ fun SwipeableTodoItem(
             modifier = Modifier
                 .fillMaxHeight()
                 .align(Alignment.CenterEnd)
-                .width(80.dp),
+                .width(72.dp),
             contentAlignment = Alignment.Center
         ) {
             NAnimatedVisibility(
@@ -148,7 +149,10 @@ fun SwipeableTodoItem(
                     tween(200, 0, LinearOutSlowInEasing),
                     0.6f
                 ) + myFadeIn(tween(100)),
-                exit = myScaleOut() + myFadeOut()
+                exit = myScaleOut(
+                    tween(200, 0, LinearOutSlowInEasing),
+                    0.6f
+                ) + myFadeOut(tween(100))
             ) {
                 Box(
                     modifier = Modifier
@@ -200,9 +204,10 @@ fun SwipeableTodoItem(
                 .graphicsLayer(translationX = animatedOffsetX)
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures(
+                        onDragStart = { initialSwipeState = swipeState },
                         onDragEnd = {
                             coroutineScope.launch {
-                                if (offsetX < -deleteThresholdPx) {
+                                if (initialSwipeState == SwipeState.REVEALED && offsetX < -deleteThresholdPx) {
                                     onDeleteClick()
                                 } else if (offsetX < -revealButtonWidthPx / 2) {
                                     offsetX = -revealButtonWidthPx
@@ -218,6 +223,12 @@ fun SwipeableTodoItem(
                             if (newOffsetX < 0) {
                                 offsetX = newOffsetX
                             }
+                            swipeState = if (offsetX < -60.dp.toPx()) {
+                                SwipeState.REVEALED
+                            } else {
+                                SwipeState.IDLE
+                            }
+
                             change.consume()
                         }
                     )
