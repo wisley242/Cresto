@@ -12,6 +12,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -39,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -62,6 +65,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -78,7 +82,7 @@ import com.nevoit.cresto.data.TodoItem
 import com.nevoit.cresto.ui.components.HorizontalFlagPicker
 import com.nevoit.cresto.ui.components.HorizontalPresetDatePicker
 import com.nevoit.cresto.ui.components.NAnimatedVisibility
-import com.nevoit.cresto.ui.components.SwipeableTodoItem
+import com.nevoit.cresto.ui.components.SwipeableTodoItemWithState
 import com.nevoit.cresto.ui.components.myFadeIn
 import com.nevoit.cresto.ui.components.myFadeOut
 import com.nevoit.cresto.ui.components.myScaleIn
@@ -108,6 +112,8 @@ fun HomeScreen() {
         factory = TodoViewModelFactory(application.repository)
     )
 
+    val revealedItemId by viewModel.revealedItemId.collectAsState()
+
     val todoList by viewModel.allTodos.collectAsStateWithLifecycle()
 
     var showSheet by remember { mutableStateOf(false) }
@@ -118,7 +124,7 @@ fun HomeScreen() {
 
     val statusBarHeight = getStatusBarHeight()
 
-    val thresholdPx = with(LocalDensity.current) { (statusBarHeight + 24.dp).toPx() }
+    val thresholdPx = with(LocalDensity.current) { (statusBarHeight + 72.dp).toPx() }
 
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
@@ -137,22 +143,37 @@ fun HomeScreen() {
         derivedStateOf { viewModel.totalScrollPx > thresholdPx }
     }
 
+
     val hazeState = rememberHazeState()
 
-    val colorMode = if (MaterialTheme.colorScheme.background == Color.White) 1 else 0
+    // val colorMode = if (MaterialTheme.colorScheme.background == Color.White) 1 else 0
 
     val onSurfaceContainer = CalculatedColor.onSurfaceContainer
 
     val surfaceColor = CalculatedColor.hierarchicalBackgroundColor
+
+    val lazyListState = rememberLazyListState()
+    LaunchedEffect(lazyListState.isScrollInProgress, revealedItemId) {
+        if (lazyListState.isScrollInProgress && revealedItemId != null) {
+            viewModel.collapseRevealedItem()
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(CalculatedColor.hierarchicalBackgroundColor)
             .nestedScroll(nestedScrollConnection)
-
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        viewModel.collapseRevealedItem()
+                    }
+                )
+            }
     ) {
         LazyColumn(
+            state = lazyListState,
             modifier = Modifier
                 .hazeSource(hazeState, 0f)
                 .fillMaxSize()
@@ -182,16 +203,19 @@ fun HomeScreen() {
                     )
                 }
             }
-
-            items(items = todoList, key = { it.id }) { item ->
-                SwipeableTodoItem(
+            items(
+                items = todoList,
+                key = { it.id }
+            ) { item ->
+                SwipeableTodoItemWithState(
                     item = item,
+                    isRevealed = (item.id == revealedItemId),
+                    onExpand = { viewModel.onItemExpanded(item.id) },
+                    onCollapse = { viewModel.onItemCollapsed(item.id) },
                     onCheckedChange = { isChecked ->
                         viewModel.update(item.copy(isCompleted = isChecked))
                     },
-                    onDeleteClick = {
-                        viewModel.delete(item)
-                    }
+                    onDeleteClick = { viewModel.delete(item) }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
@@ -283,7 +307,7 @@ fun HomeScreen() {
                         shape = CircleShape
                     )
                     .align(Alignment.TopEnd)
-                    .clickable() {
+                    .clickable {
                         showSheet = true
                     },
                 contentAlignment = Alignment.Center

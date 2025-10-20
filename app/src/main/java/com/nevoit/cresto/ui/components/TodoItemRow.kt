@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -107,18 +108,15 @@ enum class SwipeState {
 @Composable
 fun SwipeableTodoItem(
     item: TodoItem,
+    swipeState: SwipeState,
+    offsetX: Float,
     onCheckedChange: (Boolean) -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onDragStart: () -> Unit,
+    onHorizontalDrag: (dragAmount: Float) -> Unit,
+    onDragEnd: () -> Unit
 ) {
-    val coroutineScope = rememberCoroutineScope()
-    var swipeState by remember { mutableStateOf(SwipeState.IDLE) }
-    var offsetX by remember { mutableFloatStateOf(0f) }
-    var initialSwipeState by remember { mutableStateOf(SwipeState.IDLE) }
-
-    val revealButtonWidth = 72.dp
-    val revealButtonWidthPx = with(LocalDensity.current) { revealButtonWidth.toPx() }
-    val deleteThresholdPx = revealButtonWidthPx * 2
-
+    val interactionSource = remember { MutableInteractionSource() }
     val animatedOffsetX by animateFloatAsState(
         targetValue = offsetX,
         animationSpec = spring(
@@ -126,9 +124,6 @@ fun SwipeableTodoItem(
             stiffness = 500f
         )
     )
-
-    val interactionSource = remember { MutableInteractionSource() }
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -201,34 +196,13 @@ fun SwipeableTodoItem(
 
         Box(
             modifier = Modifier
-                .graphicsLayer(translationX = animatedOffsetX)
+                .graphicsLayer { translationX = animatedOffsetX }
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures(
-                        onDragStart = { initialSwipeState = swipeState },
-                        onDragEnd = {
-                            coroutineScope.launch {
-                                if (initialSwipeState == SwipeState.REVEALED && offsetX < -deleteThresholdPx) {
-                                    onDeleteClick()
-                                } else if (offsetX < -revealButtonWidthPx / 2) {
-                                    offsetX = -revealButtonWidthPx
-                                    swipeState = SwipeState.REVEALED
-                                } else {
-                                    offsetX = 0f
-                                    swipeState = SwipeState.IDLE
-                                }
-                            }
-                        },
+                        onDragStart = { onDragStart() },
+                        onDragEnd = { onDragEnd() },
                         onHorizontalDrag = { change, dragAmount ->
-                            val newOffsetX = offsetX + dragAmount
-                            if (newOffsetX < 0) {
-                                offsetX = newOffsetX
-                            }
-                            swipeState = if (offsetX < -60.dp.toPx()) {
-                                SwipeState.REVEALED
-                            } else {
-                                SwipeState.IDLE
-                            }
-
+                            onHorizontalDrag(dragAmount)
                             change.consume()
                         }
                     )
@@ -237,4 +211,72 @@ fun SwipeableTodoItem(
             TodoItemRow(item, onCheckedChange)
         }
     }
+}
+
+@Composable
+fun SwipeableTodoItemWithState(
+    item: TodoItem,
+    isRevealed: Boolean,
+    onExpand: () -> Unit,
+    onCollapse: () -> Unit,
+    onCheckedChange: (Boolean) -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    var swipeState by remember { mutableStateOf(SwipeState.IDLE) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var initialSwipeState by remember { mutableStateOf(SwipeState.IDLE) }
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val revealButtonWidth = 72.dp
+    val revealButtonWidthPx = with(LocalDensity.current) { revealButtonWidth.toPx() }
+    val deleteThresholdPx = revealButtonWidthPx * 2
+    val swipeThresholdPx = with(LocalDensity.current) { -60.dp.toPx() }
+
+    LaunchedEffect(isRevealed) {
+        if (!isRevealed) {
+            offsetX = 0f
+            swipeState = SwipeState.IDLE
+        }
+    }
+
+    SwipeableTodoItem(
+        item = item,
+        swipeState = swipeState,
+        offsetX = offsetX,
+        onCheckedChange = onCheckedChange,
+        onDeleteClick = onDeleteClick,
+        onDragStart = {
+            initialSwipeState = swipeState
+            if (swipeState == SwipeState.IDLE) {
+                onExpand()
+            }
+        },
+        onHorizontalDrag = { dragAmount ->
+            val newOffsetX = offsetX + dragAmount
+            if (newOffsetX < 0) {
+                offsetX = newOffsetX
+            }
+            swipeState = if (offsetX < swipeThresholdPx) {
+                SwipeState.REVEALED
+            } else {
+                SwipeState.IDLE
+            }
+        },
+        onDragEnd = {
+            coroutineScope.launch {
+                if (initialSwipeState == SwipeState.REVEALED && offsetX < -deleteThresholdPx) {
+                    onDeleteClick()
+                } else if (offsetX < -revealButtonWidthPx / 2) {
+                    offsetX = -revealButtonWidthPx
+                    swipeState = SwipeState.REVEALED
+                    onExpand()
+                } else {
+                    offsetX = 0f
+                    swipeState = SwipeState.IDLE
+                    onCollapse()
+                }
+            }
+        }
+    )
 }

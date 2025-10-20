@@ -8,12 +8,14 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.nevoit.cresto.data.TodoItem
 import com.nevoit.cresto.repository.TodoRepository
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class TodoViewModel(private val repository: TodoRepository) : ViewModel() {
+    // item basics
     val allTodos: StateFlow<List<TodoItem>> = repository.allTodos.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -30,9 +32,38 @@ class TodoViewModel(private val repository: TodoRepository) : ViewModel() {
 
     fun delete(item: TodoItem) = viewModelScope.launch {
         repository.delete(item)
+        _revealedItemId.value = null
     }
 
+    // scroll detect for alternative title bar
     var totalScrollPx by mutableFloatStateOf(0f)
+
+
+    // Swipe to delete
+    private val _revealedItemId = MutableStateFlow<Int?>(null)
+
+    val revealedItemId: StateFlow<Int?> = _revealedItemId
+
+    fun onItemExpanded(itemId: Int) {
+        if (_revealedItemId.value == itemId) return
+        viewModelScope.launch {
+            _revealedItemId.value = itemId
+        }
+    }
+
+    fun onItemCollapsed(itemId: Int) {
+        if (_revealedItemId.value != itemId) return
+        viewModelScope.launch {
+            _revealedItemId.value = null
+        }
+    }
+
+    fun collapseRevealedItem() {
+        if (_revealedItemId.value == null) return
+        viewModelScope.launch {
+            _revealedItemId.value = null
+        }
+    }
 }
 
 class TodoViewModelFactory(private val repository: TodoRepository) : ViewModelProvider.Factory {
