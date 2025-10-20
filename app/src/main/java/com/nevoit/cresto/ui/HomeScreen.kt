@@ -78,7 +78,7 @@ import com.nevoit.cresto.data.TodoItem
 import com.nevoit.cresto.ui.components.HorizontalFlagPicker
 import com.nevoit.cresto.ui.components.HorizontalPresetDatePicker
 import com.nevoit.cresto.ui.components.NAnimatedVisibility
-import com.nevoit.cresto.ui.components.TodoItemRow
+import com.nevoit.cresto.ui.components.SwipeableTodoItem
 import com.nevoit.cresto.ui.components.myFadeIn
 import com.nevoit.cresto.ui.components.myFadeOut
 import com.nevoit.cresto.ui.components.myScaleIn
@@ -184,7 +184,7 @@ fun HomeScreen() {
             }
 
             items(items = todoList, key = { it.id }) { item ->
-                TodoItemRow(
+                SwipeableTodoItem(
                     item = item,
                     onCheckedChange = { isChecked ->
                         viewModel.update(item.copy(isCompleted = isChecked))
