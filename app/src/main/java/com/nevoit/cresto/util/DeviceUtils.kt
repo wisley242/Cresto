@@ -1,6 +1,7 @@
 package com.nevoit.cresto.util
 
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
@@ -17,8 +18,6 @@ fun getNavigationBarHeight(): Dp {
 
 @Composable
 fun getStatusBarHeight(): Dp {
-    val statusBarHeight = WindowInsets.statusBars
-    with(LocalDensity.current) {
-        return statusBarHeight.getTop(this).toDp()
-    }
+    return WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 }
+

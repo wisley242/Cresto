@@ -20,10 +20,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -42,7 +45,6 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -93,7 +95,6 @@ import com.nevoit.cresto.ui.theme.glasense.getFlagColor
 import com.nevoit.cresto.ui.theme.glasense.linearGradientMaskT2B70
 import com.nevoit.cresto.util.deviceCornerShape
 import com.nevoit.cresto.util.g2
-import com.nevoit.cresto.util.getStatusBarHeight
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.hazeEffect
@@ -122,9 +123,20 @@ fun HomeScreen() {
         skipPartiallyExpanded = true
     )
 
-    val statusBarHeight = getStatusBarHeight()
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val density = LocalDensity.current
 
-    val thresholdPx = with(LocalDensity.current) { (statusBarHeight + 72.dp).toPx() }
+    val thresholdPx = remember(statusBarHeight, density) {
+        if (statusBarHeight > 0.dp) {
+            with(density) {
+                (statusBarHeight + 24.dp).toPx()
+            }
+        } else {
+            -1f
+        }
+    }
+
+    val isSmallTitleVisible = (thresholdPx >= 0f && viewModel.totalScrollPx > thresholdPx)
 
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
@@ -139,9 +151,9 @@ fun HomeScreen() {
         }
     }
 
-    val isSmallTitleVisible by remember {
-        derivedStateOf { viewModel.totalScrollPx > thresholdPx }
-    }
+    /* val isSmallTitleVisible by remember {
+    derivedStateOf { viewModel.totalScrollPx > thresholdPx }
+} */
 
 
     val hazeState = rememberHazeState()
