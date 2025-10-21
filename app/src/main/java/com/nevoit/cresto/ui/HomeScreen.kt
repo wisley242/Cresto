@@ -45,6 +45,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -57,16 +58,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush.Companion.verticalGradient
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -84,7 +81,7 @@ import com.nevoit.cresto.data.TodoItem
 import com.nevoit.cresto.ui.components.HorizontalFlagPicker
 import com.nevoit.cresto.ui.components.HorizontalPresetDatePicker
 import com.nevoit.cresto.ui.components.NAnimatedVisibility
-import com.nevoit.cresto.ui.components.SwipeableTodoItemWithState
+import com.nevoit.cresto.ui.components.SwipeableTodoItem
 import com.nevoit.cresto.ui.components.myFadeIn
 import com.nevoit.cresto.ui.components.myFadeOut
 import com.nevoit.cresto.ui.components.myScaleIn
@@ -125,36 +122,11 @@ fun HomeScreen() {
 
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val density = LocalDensity.current
-
-    val thresholdPx = remember(statusBarHeight, density) {
-        if (statusBarHeight > 0.dp) {
-            with(density) {
-                (statusBarHeight + 24.dp).toPx()
-            }
-        } else {
-            -1f
+    val thresholdPx = if (statusBarHeight > 0.dp) {
+        with(density) {
+            (statusBarHeight + 24.dp).toPx()
         }
-    }
-
-    val isSmallTitleVisible = (thresholdPx >= 0f && viewModel.totalScrollPx > thresholdPx)
-
-    val nestedScrollConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPostScroll(
-                consumed: Offset,
-                available: Offset,
-                source: NestedScrollSource
-            ): Offset {
-                viewModel.totalScrollPx -= consumed.y
-                return Offset.Zero
-            }
-        }
-    }
-
-    /* val isSmallTitleVisible by remember {
-    derivedStateOf { viewModel.totalScrollPx > thresholdPx }
-} */
-
+    } else 0f
 
     val hazeState = rememberHazeState()
 
@@ -171,11 +143,11 @@ fun HomeScreen() {
         }
     }
 
+    val isSmallTitleVisible by remember(thresholdPx) { derivedStateOf { ((lazyListState.firstVisibleItemIndex == 0) && (lazyListState.firstVisibleItemScrollOffset > thresholdPx)) || lazyListState.firstVisibleItemIndex > 0 } }
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(CalculatedColor.hierarchicalBackgroundColor)
-            .nestedScroll(nestedScrollConnection)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = {
@@ -217,19 +189,22 @@ fun HomeScreen() {
             }
             items(
                 items = todoList,
-                key = { it.id }
+                key = { it.id },
             ) { item ->
-                SwipeableTodoItemWithState(
-                    item = item,
-                    isRevealed = (item.id == revealedItemId),
-                    onExpand = { viewModel.onItemExpanded(item.id) },
-                    onCollapse = { viewModel.onItemCollapsed(item.id) },
-                    onCheckedChange = { isChecked ->
-                        viewModel.update(item.copy(isCompleted = isChecked))
-                    },
-                    onDeleteClick = { viewModel.delete(item) }
-                )
-                Spacer(modifier = Modifier.height(12.dp))
+                Column(modifier = Modifier.animateItem(placementSpec = spring(0.9f, 400f))) {
+                    SwipeableTodoItem(
+                        item = item,
+                        isRevealed = (item.id == revealedItemId),
+                        onExpand = { viewModel.onItemExpanded(item.id) },
+                        onCollapse = { viewModel.onItemCollapsed(item.id) },
+                        onCheckedChange = { isChecked ->
+                            viewModel.update(item.copy(isCompleted = isChecked))
+                        },
+                        onDeleteClick = { viewModel.delete(item) },
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
             }
         }
         Box(

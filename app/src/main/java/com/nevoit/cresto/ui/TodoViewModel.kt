@@ -1,8 +1,5 @@
 package com.nevoit.cresto.ui
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -34,9 +31,6 @@ class TodoViewModel(private val repository: TodoRepository) : ViewModel() {
         repository.delete(item)
         _revealedItemId.value = null
     }
-
-    // scroll detect for alternative title bar
-    var totalScrollPx by mutableFloatStateOf(0f)
 
 
     // Swipe to delete

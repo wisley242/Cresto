@@ -40,6 +40,9 @@ import com.nevoit.cresto.ui.components.CustomNavigationButton
 import com.nevoit.cresto.ui.gaussiangradient.GAUSSIAN_COLOR_INTERPOLATION_SHADER
 import com.nevoit.cresto.ui.theme.glasense.CalculatedColor
 import com.nevoit.cresto.ui.theme.glasense.linearGradientMaskB2T70
+import com.nevoit.cresto.ui.theme.glasense.linearGradientMaskB2T90
+import dev.chrisbanes.haze.ExperimentalHazeApi
+import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -51,7 +54,7 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeApi::class)
 @Composable
 fun TodoScreen() {
     val surfaceColor = CalculatedColor.hierarchicalBackgroundColor
@@ -83,12 +86,14 @@ fun TodoScreen() {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Modifier.hazeEffect(
                         hazeState
                     ) {
-                        blurRadius = 6.dp
+                        blurRadius = 10.dp
                         progressive = HazeProgressive.verticalGradient(
-                            startIntensity = 0f,
-                            endIntensity = 1f
+                            startIntensity = 0.2f,
+                            endIntensity = 0.6f
                         )
                         noiseFactor = 0f
+                        mask = linearGradientMaskB2T90
+                        inputScale = HazeInputScale.Fixed(0.5f)
                     } else Modifier.hazeEffect(
                         hazeState
                     ) {
