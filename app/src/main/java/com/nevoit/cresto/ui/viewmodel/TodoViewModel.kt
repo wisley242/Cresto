@@ -3,6 +3,7 @@ package com.nevoit.cresto.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.nevoit.cresto.data.EventItem
 import com.nevoit.cresto.data.TodoItem
 import com.nevoit.cresto.repository.TodoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,6 +11,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class TodoViewModel(private val repository: TodoRepository) : ViewModel() {
     // item basics
@@ -56,6 +59,26 @@ class TodoViewModel(private val repository: TodoRepository) : ViewModel() {
         if (_revealedItemId.value == null) return
         viewModelScope.launch {
             _revealedItemId.value = null
+        }
+    }
+
+    fun insertAiGeneratedTodos(aiItems: List<EventItem>) {
+        viewModelScope.launch {
+            try {
+                val todoItemsToInsert = aiItems.map { eventItem ->
+                    TodoItem(
+                        title = eventItem.title,
+                        dueDate = LocalDate.parse(eventItem.date, DateTimeFormatter.ISO_LOCAL_DATE)
+                    )
+                }
+
+                if (todoItemsToInsert.isNotEmpty()) {
+                    repository.insertAll(todoItemsToInsert)
+                }
+
+            } catch (e: Exception) {
+                println("Error inserting AI-generated todos: ${e.message}")
+            }
         }
     }
 }

@@ -91,7 +91,7 @@ fun myBlurOut(
     MyExitTransition(blur = Blur(animationSpec = animationSpec, radius = targetRadius))
 
 @Composable
-fun NAnimatedVisibility(
+fun CustomAnimatedVisibility(
     visibleState: MutableTransitionState<Boolean>,
     modifier: Modifier = Modifier,
     enter: MyEnterTransition,
@@ -155,7 +155,7 @@ fun NAnimatedVisibility(
 }
 
 @Composable
-fun NAnimatedVisibility(
+fun CustomAnimatedVisibility(
     visible: Boolean,
     modifier: Modifier = Modifier,
     enter: MyEnterTransition,
@@ -168,5 +168,5 @@ fun NAnimatedVisibility(
         visibleState.targetState = visible
     }
 
-    NAnimatedVisibility(visibleState, modifier, enter, exit, content)
+    CustomAnimatedVisibility(visibleState, modifier, enter, exit, content)
 }

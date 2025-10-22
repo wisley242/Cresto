@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 android {
@@ -89,4 +90,8 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.9.5")
 
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")
+
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 }

@@ -1,11 +1,6 @@
 package com.nevoit.cresto.ui
 
-import android.graphics.RuntimeShader
 import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,23 +16,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Brush.Companion.verticalGradient
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.nevoit.cresto.R
 import com.nevoit.cresto.ui.components.CustomNavigationButton
-import com.nevoit.cresto.ui.gaussiangradient.GAUSSIAN_COLOR_INTERPOLATION_SHADER
+import com.nevoit.cresto.ui.gaussiangradient.smoothGradientMask
+import com.nevoit.cresto.ui.gaussiangradient.smoothGradientMaskFallback
 import com.nevoit.cresto.ui.theme.glasense.CalculatedColor
 import com.nevoit.cresto.ui.theme.glasense.linearGradientMaskB2T70
 import com.nevoit.cresto.ui.theme.glasense.linearGradientMaskB2T90
@@ -182,120 +170,4 @@ fun TodoScreen() {
             }
         }
     }
-
-
-}
-
-
-@Composable
-fun AppNavHost(
-    navController: NavHostController
-) {
-    val fadeDuration = 0
-    NavHost(
-        navController = navController,
-        startDestination = Screen.Home.route // 设置起始页
-    ) {
-        composable(
-            route = Screen.Home.route,
-            enterTransition = {
-                fadeIn(animationSpec = tween(fadeDuration))
-            },
-            exitTransition = {
-                fadeOut(animationSpec = tween(fadeDuration))
-            }
-        ) {
-            HomeScreen()
-
-        }
-
-        composable(
-            route = Screen.Star.route,
-            enterTransition = {
-                fadeIn(animationSpec = tween(fadeDuration))
-            },
-            exitTransition = {
-                fadeOut(animationSpec = tween(fadeDuration))
-            }
-        ) {
-            StarScreen()
-
-        }
-
-        composable(
-            route = Screen.Settings.route,
-            enterTransition = {
-                fadeIn(animationSpec = tween(fadeDuration))
-            },
-            exitTransition = {
-                fadeOut(animationSpec = tween(fadeDuration))
-            }
-        ) {
-            // 这里是您个人资料页的 UI
-
-        }
-    }
-}
-
-@Composable
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-fun Modifier.smoothGradientMask(
-    startColor: Color,
-    endColor: Color,
-    center: Float,
-    sigma: Float,
-    alpha: Float
-): Modifier {
-    val shader = remember { RuntimeShader(GAUSSIAN_COLOR_INTERPOLATION_SHADER) }
-    val brush = remember { ShaderBrush(shader) }
-
-    return this.drawBehind {
-        shader.setFloatUniform(
-            "startColor",
-            startColor.red,
-            startColor.green,
-            startColor.blue,
-            startColor.alpha
-        )
-        shader.setFloatUniform(
-            "endColor",
-            endColor.red,
-            endColor.green,
-            endColor.blue,
-            endColor.alpha
-        )
-        shader.setFloatUniform(
-            "iResolution",
-            this.size.width,
-            this.size.height
-        )
-
-        shader.setFloatUniform("center", center)
-        shader.setFloatUniform("sigma", sigma)
-
-        drawRect(brush = brush, alpha = alpha)
-    }
-}
-
-private fun Modifier.smoothGradientMaskFallback(color: Color, alpha: Float): Modifier {
-    return this.background(
-        verticalGradient(
-            colorStops = arrayOf(
-                0.0f to color.copy(alpha = 0.00f),
-                0.097f to color.copy(alpha = 0.01f),
-                0.2021f to color.copy(alpha = 0.02f),
-                0.3034f to color.copy(alpha = 0.03f),
-                0.4005f to color.copy(alpha = 0.04f),
-                0.4928f to color.copy(alpha = 0.05f),
-                0.5799f to color.copy(alpha = 0.07f),
-                0.6613f to color.copy(alpha = 0.08f),
-                0.7363f to color.copy(alpha = 0.10f),
-                0.8047f to color.copy(alpha = 0.12f),
-                0.8657f to color.copy(alpha = 0.14f),
-                0.9189f to color.copy(alpha = 0.16f),
-                0.9639f to color.copy(alpha = 0.18f),
-                1.0f to color.copy(alpha = 0.20f)
-            )
-        ), alpha = alpha
-    )
 }
