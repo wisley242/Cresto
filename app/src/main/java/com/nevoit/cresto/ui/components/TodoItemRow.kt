@@ -3,6 +3,8 @@ package com.nevoit.cresto.ui.components
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.SpringSpec
+import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -31,7 +33,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,8 +48,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -371,29 +372,33 @@ fun SwipeableTodoItem(
     onDeleteClick: () -> Unit
 ) {
     var swipeState by remember { mutableStateOf(SwipeState.IDLE) }
-    var offsetX by remember { mutableFloatStateOf(0f) }
     var initialSwipeState by remember { mutableStateOf(SwipeState.IDLE) }
     val coroutineScope = rememberCoroutineScope()
 
     val density = LocalDensity.current
     val revealButtonWidthPx = with(density) { 72.dp.toPx() }
-    val swipeThresholdPx = with(density) { -60.dp.toPx() }
+    val swipeThresholdPx = with(density) { (-72 / 2 - 16).dp.toPx() }
     val deleteDistanceThresholdPx = revealButtonWidthPx * 2
-    val velocityThreshold = with(density) { 400.dp.toPx() }
-    var screenWidthPx by remember { mutableFloatStateOf(0f) }
+    val velocityThreshold = with(density) { 500.dp.toPx() }
+    val screenWidthPx = LocalWindowInfo.current.containerSize.width
 
-    val animatedOffsetX by animateFloatAsState(
-        targetValue = offsetX,
-        animationSpec = spring(dampingRatio = 0.8f, stiffness = 500f)
+    val flingOffset = remember { Animatable(0f) }
+    val deleteFlingOffset = remember { Animatable(0f) }
+    val animatedOffset by animateFloatAsState(
+        targetValue = flingOffset.value,
+        animationSpec = spring(
+            dampingRatio = 0.8f,
+            stiffness = 500f
+        )
     )
-    val deleteSlideOffsetX = remember { Animatable(0f) }
+
     val scale = remember { Animatable(1f) }
     val alpha = remember { Animatable(1f) }
 
     LaunchedEffect(isRevealed) {
-        if (!isRevealed && offsetX != 0f) {
+        if (!isRevealed && flingOffset.value != 0f) {
             coroutineScope.launch {
-                offsetX = 0f
+                flingOffset.snapTo(0f)
                 swipeState = SwipeState.IDLE
             }
         }
@@ -401,7 +406,6 @@ fun SwipeableTodoItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .onSizeChanged { screenWidthPx = it.width.toFloat() }
     ) {
         Box(
             modifier = Modifier
@@ -429,7 +433,7 @@ fun SwipeableTodoItem(
                         .graphicsLayer(
                             scaleX = scale.value,
                             scaleY = scale.value,
-                            alpha = alpha.value
+                            alpha = alpha.value,
                         )
                         .clip(CircleShape)
                         .size(48.dp)
@@ -442,8 +446,8 @@ fun SwipeableTodoItem(
                                         launch { scale.animateTo(0.8f, tween(100)) },
                                         launch { alpha.animateTo(0f, tween(100)) },
                                         launch {
-                                            deleteSlideOffsetX.animateTo(
-                                                targetValue = -screenWidthPx - offsetX,
+                                            deleteFlingOffset.animateTo(
+                                                targetValue = -screenWidthPx - flingOffset.value,
                                                 animationSpec = tween(
                                                     100,
                                                     easing = CubicBezierEasing(
@@ -497,14 +501,21 @@ fun SwipeableTodoItem(
 
         Box(
             modifier = Modifier
-                .graphicsLayer { translationX = animatedOffsetX + deleteSlideOffsetX.value }
+                .graphicsLayer {
+                    translationX =
+                        animatedOffset + deleteFlingOffset.value
+                }
                 .draggable(
                     orientation = Orientation.Horizontal,
                     state = rememberDraggableState { delta ->
-                        val newOffsetX = (offsetX + delta).coerceAtMost(0f)
-                        offsetX = newOffsetX
-                        swipeState =
-                            if (newOffsetX < swipeThresholdPx) SwipeState.REVEALED else SwipeState.IDLE
+                        coroutineScope.launch {
+                            // val newOffsetX = (offsetX + delta).coerceAtMost(0f)
+                            val newOffsetX = (flingOffset.value + delta).coerceAtMost(0f)
+                            flingOffset.snapTo(newOffsetX)
+                            // offsetX = newOffsetX
+                            swipeState =
+                                if (newOffsetX < swipeThresholdPx) SwipeState.REVEALED else SwipeState.IDLE
+                        }
                     },
                     onDragStarted = {
                         initialSwipeState = swipeState
@@ -514,16 +525,41 @@ fun SwipeableTodoItem(
                     },
                     onDragStopped = { velocity ->
                         coroutineScope.launch {
-                            if (initialSwipeState == SwipeState.REVEALED && (offsetX < -deleteDistanceThresholdPx || velocity < -velocityThreshold)) {
-                                offsetX = -screenWidthPx - revealButtonWidthPx
-                                onDeleteClick()
-                            } else if (offsetX < -revealButtonWidthPx / 2) {
+                            if (initialSwipeState == SwipeState.REVEALED && ((flingOffset.value < -deleteDistanceThresholdPx && velocity < -velocityThreshold) || (flingOffset.value < -deleteDistanceThresholdPx && velocity <= 0))) {
+                                coroutineScope.launch {
+                                    swipeState = SwipeState.IDLE
+                                    deleteFlingOffset.animateTo(
+                                        targetValue = -screenWidthPx + revealButtonWidthPx,
+                                        animationSpec = TweenSpec(
+                                            durationMillis = 150,
+                                            delay = 0,
+                                            easing = CubicBezierEasing(
+                                                0.2f,
+                                                0f,
+                                                0.56f,
+                                                0.48f
+                                            )
+                                        ),
+                                        initialVelocity = velocity
+                                    )
+                                    onDeleteClick()
+                                }
+                            } else if ((flingOffset.value < -revealButtonWidthPx / 2) || (velocity < -velocityThreshold && flingOffset.value < -revealButtonWidthPx / 4)) {
                                 swipeState = SwipeState.REVEALED
-                                offsetX = -revealButtonWidthPx
+                                coroutineScope.launch {
+                                    flingOffset.animateTo(
+                                        targetValue = -revealButtonWidthPx,
+                                        animationSpec = SpringSpec(
+                                            dampingRatio = 0.8f,
+                                            stiffness = 1000f
+                                        ),
+                                        initialVelocity = velocity
+                                    )
+                                }
                                 onExpand()
                             } else {
-                                offsetX = 0f
                                 swipeState = SwipeState.IDLE
+                                coroutineScope.launch { flingOffset.snapTo(0f) }
                                 onCollapse()
                             }
                         }
