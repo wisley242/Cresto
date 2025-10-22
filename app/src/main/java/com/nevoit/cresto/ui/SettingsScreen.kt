@@ -221,7 +221,7 @@ fun SettingsScreen(aiViewModel: AiViewModel = viewModel()) {
                         ConfigEntryItem(
                             color = Slate500,
                             icon = painterResource(R.drawable.ic_twotone_info),
-                            title = "Acknowledgement & Credits"
+                            title = "Credits"
                         )
                     }
                 }
