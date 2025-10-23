@@ -1,5 +1,6 @@
 package com.nevoit.cresto.ui
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +47,8 @@ import com.kyant.capsule.ContinuousCapsule
 import com.kyant.capsule.ContinuousRoundedRectangle
 import com.nevoit.cresto.CrestoApplication
 import com.nevoit.cresto.R
+import com.nevoit.cresto.settings.AIActivity
+import com.nevoit.cresto.settings.AppearanceActivity
 import com.nevoit.cresto.ui.components.ConfigContainer
 import com.nevoit.cresto.ui.components.ConfigEntryItem
 import com.nevoit.cresto.ui.components.DynamicSmallTitle
@@ -98,6 +101,8 @@ fun SettingsScreen(aiViewModel: AiViewModel = viewModel()) {
         factory = TodoViewModelFactory(application.repository)
     )
 
+    val context = LocalContext.current
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -134,7 +139,11 @@ fun SettingsScreen(aiViewModel: AiViewModel = viewModel()) {
                             ),
                             icon = painterResource(R.drawable.ic_twotone_sparkles),
                             title = "AI",
-                            enableGlow = true
+                            enableGlow = true,
+                            onClick = {
+                                val intent = Intent(context, AIActivity::class.java)
+                                context.startActivity(intent)
+                            }
                         )
                     }
                 }
@@ -146,19 +155,25 @@ fun SettingsScreen(aiViewModel: AiViewModel = viewModel()) {
                         ConfigEntryItem(
                             color = Blue500,
                             icon = painterResource(R.drawable.ic_twotone_image),
-                            title = "Appearance"
+                            title = "Appearance",
+                            onClick = {
+                                val intent = Intent(context, AppearanceActivity::class.java)
+                                context.startActivity(intent)
+                            }
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         ConfigEntryItem(
                             color = Slate500,
                             icon = painterResource(R.drawable.ic_twotone_storage),
-                            title = "Data & Storage"
+                            title = "Data & Storage",
+                            onClick = {}
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         ConfigEntryItem(
                             color = Slate500,
                             icon = painterResource(R.drawable.ic_twotone_gear),
-                            title = "General"
+                            title = "General",
+                            onClick = {}
                         )
                     }
                 }
@@ -217,13 +232,18 @@ fun SettingsScreen(aiViewModel: AiViewModel = viewModel()) {
                                     .width(20.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        ConfigEntryItem(
-                            color = Slate500,
-                            icon = painterResource(R.drawable.ic_twotone_info),
-                            title = "Credits"
-                        )
                     }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            item {
+                ConfigContainer(backgroundColor = hierarchicalSurfaceColor) {
+                    ConfigEntryItem(
+                        color = Slate500,
+                        icon = painterResource(R.drawable.ic_twotone_info),
+                        title = "Credits",
+                        onClick = {}
+                    )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }

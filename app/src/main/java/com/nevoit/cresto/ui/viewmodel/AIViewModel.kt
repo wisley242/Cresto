@@ -90,7 +90,7 @@ class AiViewModel : ViewModel() {
         viewModelScope.launch {
             val generativeModel = GenerativeModel(
                 // 推荐使用支持多模态（图片和文字）的模型
-                modelName = "gemini-2.0-flash",
+                modelName = "gemini-2.5-flash",
                 apiKey = apiKey,
                 systemInstruction = systemInstruction
             )

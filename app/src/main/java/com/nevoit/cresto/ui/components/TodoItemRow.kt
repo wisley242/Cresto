@@ -86,17 +86,26 @@ fun TodoItemRow(
             onCheckedChange = onCheckedChange
         )
         Spacer(modifier = Modifier.width(12.dp))
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(vertical = 12.dp)
-        ) {
+        if (item.dueDate == null) {
             Text(
                 text = item.title,
                 textDecoration = if (item.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 12.dp)
             )
-            if (item.dueDate != null) {
+        } else {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 12.dp)
+            ) {
+                Text(
+                    text = item.title,
+                    textDecoration = if (item.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
+                    style = MaterialTheme.typography.bodyMedium
+                )
                 Text(
                     text = item.dueDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")),
                     style = MaterialTheme.typography.bodyMedium,
