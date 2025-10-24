@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ConfigItem(
     title: String,
-    isSwitch: Boolean? = false,
+    content: @Composable () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -31,8 +31,6 @@ fun ConfigItem(
                 .align(Alignment.CenterVertically)
         )
         Spacer(modifier = Modifier.width(12.dp))
-        if (isSwitch == true) {
-            GlasenseSwitch(state = true)
-        }
+        content()
     }
 }

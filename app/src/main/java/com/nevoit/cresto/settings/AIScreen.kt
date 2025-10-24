@@ -39,6 +39,7 @@ import com.nevoit.cresto.ui.components.ConfigInfoHeader
 import com.nevoit.cresto.ui.components.ConfigItem
 import com.nevoit.cresto.ui.components.ConfigItemContainer
 import com.nevoit.cresto.ui.components.DynamicSmallTitle
+import com.nevoit.cresto.ui.components.GlasenseSwitch
 import com.nevoit.cresto.ui.theme.glasense.Blue500
 import com.nevoit.cresto.ui.theme.glasense.CalculatedColor
 import com.nevoit.cresto.ui.theme.glasense.Pink400
@@ -122,7 +123,9 @@ fun AIScreen() {
                     backgroundColor = hierarchicalSurfaceColor
                 ) {
                     Column {
-                        ConfigItem(title = "API Key", isSwitch = false)
+                        ConfigItem(title = "API Key") {
+                            GlasenseSwitch(checked = true, onCheckedChange = {})
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         Spacer(
                             modifier = Modifier
@@ -137,7 +140,9 @@ fun AIScreen() {
                                 .fillMaxWidth()
                                 .height(0.dp))
                         Spacer(modifier = Modifier.height(8.dp))
-                        ConfigItem(title = "URL", isSwitch = false)
+                        ConfigItem(title = "URL") {
+                            GlasenseSwitch(checked = true, onCheckedChange = {})
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
@@ -148,7 +153,9 @@ fun AIScreen() {
                     backgroundColor = hierarchicalSurfaceColor
                 ) {
                     Column() {
-                        ConfigItem(title = "Input", isSwitch = false)
+                        ConfigItem(title = "Input") {
+                            GlasenseSwitch(checked = true, onCheckedChange = {})
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         Spacer(
                             modifier = Modifier
@@ -163,7 +170,9 @@ fun AIScreen() {
                                 .fillMaxWidth()
                                 .height(0.dp))
                         Spacer(modifier = Modifier.height(8.dp))
-                        ConfigItem(title = "Response", isSwitch = false)
+                        ConfigItem(title = "Response") {
+                            GlasenseSwitch(checked = true, onCheckedChange = {})
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(500.dp))

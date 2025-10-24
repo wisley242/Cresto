@@ -1,60 +1,142 @@
 package com.nevoit.cresto.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import android.graphics.Paint
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.kyant.capsule.ContinuousCapsule
 import com.nevoit.cresto.ui.theme.glasense.Green500
-import com.nevoit.cresto.util.g2
 
 @Composable
 fun GlasenseSwitch(
-    enabled: Boolean? = true, state: Boolean? = false
+    enabled: Boolean = true,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
 ) {
-    val moveDistance = with(LocalDensity.current) { 18.dp.toPx() }
-    Box(
+    val density = LocalDensity.current
+    val radius = with(density) { 11.dp.toPx() }
+    val startPadding = with(density) { 3.dp.toPx() }
+    val elevation = with(density) { 4.dp.toPx() }
+    val leftX = startPadding + radius
+    val moveDistance = with(density) { 18.dp.toPx() }
+    val thumbOffsetAnimation by animateFloatAsState(
+        targetValue = if (checked) moveDistance else 0f,
+        animationSpec = spring(.7f, 500f)
+    )
+
+    val trackColorAnimation by animateColorAsState(
+        targetValue = when {
+            !enabled && checked -> Green500.copy(.5f)
+            !enabled && !checked -> Color(0xFF787880).copy(.12f)
+            checked -> Green500
+            else -> Color(0xFF787880).copy(.25f)
+        },
+        animationSpec = tween(durationMillis = 200),
+    )
+
+    BoxWithConstraints(
         modifier = Modifier
-            .width(46.dp)
             .height(28.dp)
-            .background(
-                color = if (state == true) Green500 else Color(0xFF787880),
-                shape = ContinuousCapsule(
-                    g2
-                )
-            )
+            .width(46.dp)
+            .clickable(
+                enabled = enabled,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
+                onCheckedChange(!checked)
+            },
     ) {
-        Box(
-            modifier = Modifier
-                .graphicsLayer(translationX = moveDistance)
-                .padding(start = 3.dp)
-                .align(Alignment.CenterStart)
-                .dropShadow(
-                    shape = CircleShape,
-                    shadow = Shadow(
-                        radius = 4.dp,
-                        color = Color.Black.copy(.16f),
-                        offset = DpOffset(x = 0.dp, y = 2.dp)
-                    )
-                )
-                .size(22.dp)
-                .background(
-                    color = Color.White,
-                    shape = CircleShape
-                )
+        val canvasWidth = constraints.maxWidth.toFloat()
+        val canvasHeight = constraints.maxHeight.toFloat()
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            drawTrack(
+                width = canvasWidth,
+                height = canvasHeight,
+                color = trackColorAnimation,
+                density = density
+            )
+            drawThumbWithShadow(
+                centerX = leftX + thumbOffsetAnimation,
+                centerY = leftX,
+                radius = radius,
+                color = Color.White,
+                shadowColor = Color.Black.copy(.16f),
+                elevation = elevation
+            )
+        }
+    }
+}
+
+private fun DrawScope.drawThumbWithShadow(
+    centerX: Float,
+    centerY: Float,
+    radius: Float,
+    color: Color,
+    shadowColor: Color,
+    elevation: Float,
+) {
+    val shadowColorArgb = shadowColor.copy(alpha = shadowColor.alpha).toArgb()
+    val colorArgb = color.toArgb()
+
+    drawContext.canvas.nativeCanvas.apply {
+        val paint = Paint().apply {
+            isAntiAlias = true
+        }
+
+        paint.setShadowLayer(
+            elevation,
+            0f,
+            elevation / 2,
+            shadowColorArgb
+        )
+
+        paint.color = colorArgb
+        drawCircle(
+            centerX,
+            centerY,
+            radius,
+            paint
+        )
+    }
+}
+
+private fun DrawScope.drawTrack(
+    width: Float,
+    height: Float,
+    color: Color,
+    density: Density
+) {
+    drawContext.canvas.nativeCanvas.apply {
+        val size = Size(width, height)
+        val outline = ContinuousCapsule.createOutline(
+            size = size,
+            layoutDirection = LayoutDirection.Ltr,
+            density = density
+        )
+        drawOutline(
+            outline = outline, color = color
         )
     }
 }

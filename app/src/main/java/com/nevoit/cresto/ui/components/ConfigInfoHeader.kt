@@ -95,7 +95,7 @@ fun ConfigInfoHeader(
             lineHeight = 18.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier
-                .padding(start = 24.dp, top = 0.dp, end = 24.dp, bottom = 24.dp)
+                .padding(start = 24.dp, top = 0.dp, end = 24.dp, bottom = 20.dp)
                 .fillMaxWidth()
                 .alpha(.5f)
         )

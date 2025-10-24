@@ -40,7 +40,6 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
-                        // 在这里调用我们的主屏幕
                         TodoScreen()
                     }
                 }

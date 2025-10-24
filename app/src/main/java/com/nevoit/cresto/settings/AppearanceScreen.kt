@@ -25,19 +25,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nevoit.cresto.R
+import com.nevoit.cresto.settings.util.SettingsViewModel
+import com.nevoit.cresto.ui.components.ColorModeSelector
 import com.nevoit.cresto.ui.components.ConfigInfoHeader
 import com.nevoit.cresto.ui.components.ConfigItem
 import com.nevoit.cresto.ui.components.ConfigItemContainer
 import com.nevoit.cresto.ui.components.DynamicSmallTitle
+import com.nevoit.cresto.ui.components.GlasenseSwitch
 import com.nevoit.cresto.ui.theme.glasense.Blue500
 import com.nevoit.cresto.ui.theme.glasense.CalculatedColor
 import dev.chrisbanes.haze.ExperimentalHazeApi
@@ -46,7 +52,7 @@ import dev.chrisbanes.haze.rememberHazeState
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeApi::class)
 @Composable
-fun AppearanceScreen() {
+fun AppearanceScreen(settingsViewModel: SettingsViewModel = viewModel()) {
     val activity = LocalActivity.current
 
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -72,6 +78,26 @@ fun AppearanceScreen() {
     val dp = with(density) {
         1.dp.toPx()
     }
+
+    val colorMode = if (MaterialTheme.colorScheme.onBackground == Color.Black) 0 else 1
+
+    var isCustomPrimaryColor by settingsViewModel.isCustomPrimaryColorEnabled
+    var isUseDynamicColorScheme by settingsViewModel.isUseDynamicColor
+    var isLiteMode by settingsViewModel.isLiteMode
+    var isLiquidGlass by settingsViewModel.isLiquidGlass
+    val currentMode by settingsViewModel.colorMode
+
+
+
+
+
+
+
+
+
+
+
+
 
     Box(
         modifier = Modifier
@@ -106,10 +132,12 @@ fun AppearanceScreen() {
                 Spacer(modifier = Modifier.height(12.dp))
             }
             item {
-                ConfigItemContainer(
-                    backgroundColor = hierarchicalSurfaceColor
-                ) {
-                }
+                ColorModeSelector(
+                    backgroundColor = hierarchicalSurfaceColor,
+                    onChange = { settingsViewModel.colorMode(it) },
+                    colorMode = colorMode,
+                    currentMode = currentMode
+                )
                 Spacer(modifier = Modifier.height(12.dp))
             }
             item {
@@ -118,7 +146,11 @@ fun AppearanceScreen() {
                     backgroundColor = hierarchicalSurfaceColor
                 ) {
                     Column {
-                        ConfigItem(title = "Custom Primary Color", isSwitch = true)
+                        ConfigItem(title = "Custom Primary Color") {
+                            GlasenseSwitch(
+                                checked = isCustomPrimaryColor,
+                                onCheckedChange = { settingsViewModel.onCustomPrimaryColorChanged(it) })
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         Spacer(
                             modifier = Modifier
@@ -133,7 +165,11 @@ fun AppearanceScreen() {
                                 .fillMaxWidth()
                                 .height(0.dp))
                         Spacer(modifier = Modifier.height(8.dp))
-                        ConfigItem(title = "Use Dynamic Color Scheme", isSwitch = true)
+                        ConfigItem(title = "Use Dynamic Color Scheme") {
+                            GlasenseSwitch(
+                                checked = isUseDynamicColorScheme,
+                                onCheckedChange = { settingsViewModel.onUseDynamicColorChanged(it) })
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
@@ -144,7 +180,11 @@ fun AppearanceScreen() {
                     backgroundColor = hierarchicalSurfaceColor
                 ) {
                     Column() {
-                        ConfigItem(title = "Lite Mode", isSwitch = true)
+                        ConfigItem(title = "Lite Mode") {
+                            GlasenseSwitch(
+                                checked = isLiteMode,
+                                onCheckedChange = { settingsViewModel.onLiteModeChanged(it) })
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         Spacer(
                             modifier = Modifier
@@ -159,7 +199,11 @@ fun AppearanceScreen() {
                                 .fillMaxWidth()
                                 .height(0.dp))
                         Spacer(modifier = Modifier.height(8.dp))
-                        ConfigItem(title = "Liquid Glass", isSwitch = true)
+                        ConfigItem(title = "Liquid Glass") {
+                            GlasenseSwitch(
+                                checked = isLiquidGlass,
+                                onCheckedChange = { settingsViewModel.onLiquidGlassChanged(it) })
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
