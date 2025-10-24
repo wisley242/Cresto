@@ -60,6 +60,8 @@ dependencies {
     implementation(libs.androidx.compose.animation.graphics)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.androidx.foundation.layout)
+    implementation(libs.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -72,7 +74,7 @@ dependencies {
     // ViewModel and LiveData
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4") // ViewModel for Compose
     implementation(libs.androidx.lifecycle.runtime.ktx) // LifecycleScope
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4") // collectAsStateWithLifecycle
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")// collectAsStateWithLifecycle
 
     // Room Database
     implementation("androidx.room:room-runtime:2.8.2")

@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,9 +48,11 @@ import com.nevoit.cresto.CrestoApplication
 import com.nevoit.cresto.R
 import com.nevoit.cresto.data.TodoItem
 import com.nevoit.cresto.ui.components.AddTodoSheet
+import com.nevoit.cresto.ui.components.BottomSheet
 import com.nevoit.cresto.ui.components.DynamicSmallTitle
 import com.nevoit.cresto.ui.components.PageHeader
 import com.nevoit.cresto.ui.components.SwipeableTodoItem
+import com.nevoit.cresto.ui.components.WindowManagerComposable
 import com.nevoit.cresto.ui.theme.glasense.CalculatedColor
 import com.nevoit.cresto.util.deviceCornerShape
 import dev.chrisbanes.haze.ExperimentalHazeApi
@@ -75,9 +76,7 @@ fun HomeScreen() {
 
     var showSheet by remember { mutableStateOf(false) }
 
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
+    val sheetState = rememberModalBottomSheetState()
 
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val density = LocalDensity.current
@@ -222,8 +221,40 @@ fun HomeScreen() {
             }
         }
     }
-
     if (showSheet) {
+        WindowManagerComposable(
+            visible = true,
+            onDismissRequest = { showSheet = false }) {
+
+            BottomSheet(
+                visible = true,
+                shape = deviceCornerShape(bottomLeft = false, bottomRight = false),
+                containerColor = MaterialTheme.colorScheme.surface,
+                onDismiss = {},
+                onClose = {}) {
+                AddTodoSheet(
+                    onAddClick = { title, flagIndex, finalDate ->
+                        scope.launch {
+                            sheetState.hide()
+                        }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                showSheet = false
+                            }
+                            viewModel.insert(
+                                TodoItem(
+                                    title = title,
+                                    flag = flagIndex,
+                                    dueDate = finalDate
+                                )
+                            )
+                        }
+                    },
+                )
+            }
+        }
+    }
+
+    /*if (showSheet) {
         ModalBottomSheet(
             onDismissRequest = { showSheet = false },
             sheetState = sheetState,
@@ -249,7 +280,7 @@ fun HomeScreen() {
                 },
             )
         }
-    }
+    }*/
 }
 
 
