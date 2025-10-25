@@ -1,19 +1,13 @@
 package com.nevoit.cresto.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,7 +19,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,12 +33,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush.Companion.verticalGradient
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -64,17 +59,20 @@ enum class SelectedButton {
 
 @Composable
 fun AddTodoSheet(
-    onAddClick: (String, Int, LocalDate?) -> Unit
+    onAddClick: (String, Int, LocalDate?) -> Unit,
+    onClose: () -> Unit
 ) {
     var selectedButton by remember { mutableStateOf(SelectedButton.NONE) }
     val state = rememberTextFieldState()
     val focusRequester = remember { FocusRequester() }
     var selectedIndex by remember { mutableIntStateOf(0) }
     var finalDate by remember { mutableStateOf<LocalDate?>(null) }
+    val keyboardController = LocalSoftwareKeyboardController.current
     val onAdd = {
         val text = state.text as String
         val dueDate = LocalDate.now()
         if (text.isNotBlank()) {
+            keyboardController?.hide()
             onAddClick(text, selectedIndex, finalDate)
         }
     }
@@ -86,16 +84,70 @@ fun AddTodoSheet(
             .padding(12.dp, 0.dp, 12.dp, 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            "New Task",
-            style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Start,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp, 0.dp)
-        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            GlasenseButton(
+                enabled = true,
+                shape = CircleShape,
+                onClick = { onClose() },
+                modifier = Modifier
+                    .width(48.dp)
+                    .height(48.dp),
+                colors = AppButtonColors.secondary(),
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_cross),
+                    contentDescription = "Done",
+                    modifier = Modifier.width(28.dp)
+                )
+            }
+            Text(
+                text = "New Todo",
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.headlineSmall
+            )
+            GlasenseButton(
+                enabled = true,
+                shape = CircleShape,
+                onClick = onAdd,
+                modifier = Modifier
+                    .width(48.dp)
+                    .height(48.dp),
+                colors = AppButtonColors.primary()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .drawBehind {
+                            val outline = CircleShape.createOutline(
+                                size = this.size,
+                                layoutDirection = this.layoutDirection,
+                                density = this,
+                            )
+                            val gradientBrush = verticalGradient(
+                                colorStops = arrayOf(
+                                    0.0f to Color.White.copy(alpha = 0.2f),
+                                    1.0f to Color.White.copy(alpha = 0.02f)
+                                )
+                            )
+                            drawOutline(
+                                outline = outline,
+                                brush = gradientBrush,
+                                style = Stroke(width = 3.dp.toPx()),
+                                blendMode = BlendMode.Plus
+                            )
+                        }, contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_checkmark),
+                        contentDescription = "Done",
+                        modifier = Modifier.width(28.dp)
+                    )
+                }
 
-
+            }
+        }
         Spacer(modifier = Modifier.height(12.dp))
         Box(
             modifier = Modifier
@@ -112,8 +164,8 @@ fun AddTodoSheet(
                 BasicTextField(
                     state = state,
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    //.focusRequester(focusRequester),
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     onKeyboardAction = { onAdd() },
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
@@ -132,8 +184,8 @@ fun AddTodoSheet(
 
             val collapsedSize = 48.dp
             val spacerSize = 12.dp
-            val expandedWidth = totalWidth - (collapsedSize * 1) - 48.dp - (spacerSize * 2)
-            val defaultWidth = (totalWidth - 48.dp - (spacerSize * 2)) / 2
+            val expandedWidth = totalWidth - (collapsedSize * 1) - (spacerSize * 1)
+            val defaultWidth = (totalWidth - (spacerSize * 1)) / 2
 
             val dueDateWidth by animateDpAsState(
                 targetValue = when (selectedButton) {
@@ -174,11 +226,11 @@ fun AddTodoSheet(
             ) {
                 Row(
                     modifier = Modifier
-                        .width(totalWidth - 48.dp - spacerSize)
+                        .width(totalWidth)
                         .height(48.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Button(
+                    GlasenseButtonAlt(
                         enabled = true,
                         shape = ContinuousCapsule(g2),
                         onClick = {
@@ -192,20 +244,20 @@ fun AddTodoSheet(
                             .height(48.dp)
                             .width(dueDateWidth),
                         colors = AppButtonColors.secondary(),
-                        contentPadding = PaddingValues(0.dp)
+                        indication = true
                     ) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            with(this@Button) {
-                                AnimatedVisibility(
+                            with(this) {
+                                CustomAnimatedVisibility(
                                     visible = selectedButton != SelectedButton.DUE_DATE,
-                                    enter = fadeIn(animationSpec = tween(delayMillis = 100)) + scaleIn(
+                                    enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
                                         animationSpec = tween(delayMillis = 100),
                                         initialScale = 0.9f
                                     ),
-                                    exit = fadeOut(animationSpec = tween(durationMillis = 100)) + scaleOut(
+                                    exit = myFadeOut(animationSpec = tween(durationMillis = 100)) + myScaleOut(
                                         animationSpec = tween(delayMillis = 100),
                                         targetScale = 0.9f
                                     )
@@ -216,13 +268,13 @@ fun AddTodoSheet(
                                         modifier = Modifier.width(28.dp)
                                     )
                                 }
-                                AnimatedVisibility(
+                                CustomAnimatedVisibility(
                                     visible = selectedButton == SelectedButton.DUE_DATE,
-                                    enter = fadeIn(animationSpec = tween(delayMillis = 100)) + scaleIn(
+                                    enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
                                         animationSpec = tween(delayMillis = 100),
                                         initialScale = 0.9f
                                     ),
-                                    exit = fadeOut(animationSpec = tween(durationMillis = 100)) + scaleOut(
+                                    exit = myFadeOut(animationSpec = tween(durationMillis = 100)) + myScaleOut(
                                         animationSpec = tween(delayMillis = 100),
                                         targetScale = 0.9f
                                     )
@@ -240,7 +292,7 @@ fun AddTodoSheet(
 
                     }
                     Spacer(modifier = Modifier.width(12.dp))
-                    Button(
+                    GlasenseButtonAlt(
                         enabled = true,
                         shape = ContinuousCapsule(g2),
                         onClick = {
@@ -254,65 +306,62 @@ fun AddTodoSheet(
                             .height(48.dp)
                             .width(flagWidth),
                         colors = AppButtonColors.secondary(),
-                        contentPadding = PaddingValues(0.dp),
                     ) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            with(this@Button) {
-                                AnimatedVisibility(
-                                    visible = selectedButton != SelectedButton.FLAG,
-                                    enter = fadeIn(animationSpec = tween(delayMillis = 100)) + scaleIn(
-                                        animationSpec = tween(delayMillis = 100),
-                                        initialScale = 0.9f
-                                    ),
-                                    exit = fadeOut(animationSpec = tween(durationMillis = 100)) + scaleOut(
-                                        animationSpec = tween(delayMillis = 100),
-                                        targetScale = 0.9f
-                                    )
-                                ) {
-                                    val displayColor = getFlagColor(selectedIndex)
-                                    Icon(
-                                        painter = if (displayColor == Color.Transparent) {
-                                            painterResource(id = R.drawable.ic_flag)
-                                        } else {
-                                            painterResource(id = R.drawable.ic_flag_fill)
-                                        },
-                                        contentDescription = "Flag",
-                                        modifier = Modifier.width(28.dp),
-                                        tint = if (displayColor == Color.Transparent) {
-                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5F)
-                                        } else {
-                                            displayColor
-                                        }
-                                    )
-                                }
-                                AnimatedVisibility(
-                                    visible = selectedButton == SelectedButton.FLAG,
-                                    enter = fadeIn(animationSpec = tween(delayMillis = 100)) + scaleIn(
-                                        animationSpec = tween(delayMillis = 100),
-                                        initialScale = 0.9f
-                                    ),
-                                    exit = fadeOut(animationSpec = tween(durationMillis = 100)) + scaleOut(
-                                        animationSpec = tween(delayMillis = 100),
-                                        targetScale = 0.9f
-                                    )
-                                ) {
+                            CustomAnimatedVisibility(
+                                visible = selectedButton != SelectedButton.FLAG,
+                                enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
+                                    animationSpec = tween(delayMillis = 100),
+                                    initialScale = 0.9f
+                                ),
+                                exit = myFadeOut(animationSpec = tween(durationMillis = 100)) + myScaleOut(
+                                    animationSpec = tween(delayMillis = 100),
+                                    targetScale = 0.9f
+                                )
+                            ) {
+                                val displayColor = getFlagColor(selectedIndex)
+                                Icon(
+                                    painter = if (displayColor == Color.Transparent) {
+                                        painterResource(id = R.drawable.ic_flag)
+                                    } else {
+                                        painterResource(id = R.drawable.ic_flag_fill)
+                                    },
+                                    contentDescription = "Flag",
+                                    modifier = Modifier.width(28.dp),
+                                    tint = if (displayColor == Color.Transparent) {
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5F)
+                                    } else {
+                                        displayColor
+                                    }
+                                )
+                            }
+                            CustomAnimatedVisibility(
+                                visible = selectedButton == SelectedButton.FLAG,
+                                enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
+                                    animationSpec = tween(delayMillis = 100),
+                                    initialScale = 0.9f
+                                ),
+                                exit = myFadeOut(animationSpec = tween(durationMillis = 100)) + myScaleOut(
+                                    animationSpec = tween(delayMillis = 100),
+                                    targetScale = 0.9f
+                                )
+                            ) {
 
-                                    HorizontalFlagPicker(
-                                        selectedIndex = selectedIndex,
-                                        onIndexSelected = { newIndex ->
-                                            selectedIndex = newIndex
-                                            selectedButton = SelectedButton.NONE
-                                        }
-                                    )
+                                HorizontalFlagPicker(
+                                    selectedIndex = selectedIndex,
+                                    onIndexSelected = { newIndex ->
+                                        selectedIndex = newIndex
+                                        selectedButton = SelectedButton.NONE
+                                    }
+                                )
 
-                                }
                             }
                         }
-
                     }
+
                     /*pacer(modifier = Modifier.width(12.dp))
                     Button(
                         enabled = true,
@@ -336,47 +385,6 @@ fun AddTodoSheet(
                             modifier = Modifier.width(28.dp)
                         )
                     }*/
-
-                }
-                Button(
-                    enabled = true,
-                    shape = CircleShape,
-                    onClick = onAdd,
-                    modifier = Modifier
-                        .width(48.dp)
-                        .height(48.dp),
-                    colors = AppButtonColors.primary(),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .drawBehind {
-                                val outline = CircleShape.createOutline(
-                                    size = this.size,
-                                    layoutDirection = this.layoutDirection,
-                                    density = this,
-                                )
-                                val gradientBrush = verticalGradient(
-                                    colorStops = arrayOf(
-                                        0.0f to Color.White.copy(alpha = 0.2f),
-                                        1.0f to Color.White.copy(alpha = 0.02f)
-                                    )
-                                )
-                                drawOutline(
-                                    outline = outline,
-                                    brush = gradientBrush,
-                                    style = Stroke(width = 3.dp.toPx()),
-                                    blendMode = BlendMode.Plus
-                                )
-                            }, contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_checkmark),
-                            contentDescription = "Done",
-                            modifier = Modifier.width(28.dp)
-                        )
-                    }
 
                 }
             }

@@ -10,12 +10,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun ConfigItem(
     title: String,
-    content: @Composable () -> Unit,
+    color: Color = Color.Unspecified,
+    content: @Composable () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -28,7 +30,8 @@ fun ConfigItem(
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
                 .weight(1f)
-                .align(Alignment.CenterVertically)
+                .align(Alignment.CenterVertically),
+            color = color
         )
         Spacer(modifier = Modifier.width(12.dp))
         content()

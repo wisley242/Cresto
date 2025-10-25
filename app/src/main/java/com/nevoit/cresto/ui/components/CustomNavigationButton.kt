@@ -2,10 +2,8 @@ package com.nevoit.cresto.ui.components
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,20 +75,20 @@ fun CustomNavigationButton(
 
     }
 
-    Button(
+    GlasenseButton(
         shape = ContinuousCapsule(g2),
         onClick = onClick,
         modifier = finalModifier,
         colors = if (isActive) NavigationButtonActiveColors.primary() else NavigationButtonNormalColors.primary(),
-        contentPadding = PaddingValues(0.dp)
+        animated = false
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-
             Box(
                 modifier = Modifier
+                    .clip(shape = ContinuousCapsule(g2))
                     .drawWithCache {
                         val outline = ContinuousCapsule(g2).createOutline(
                             size = this.size,

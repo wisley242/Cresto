@@ -2,7 +2,6 @@ package com.nevoit.cresto.ui
 
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,12 +13,14 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +36,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -47,9 +47,9 @@ import com.kyant.capsule.ContinuousCapsule
 import com.nevoit.cresto.CrestoApplication
 import com.nevoit.cresto.R
 import com.nevoit.cresto.data.TodoItem
-import com.nevoit.cresto.ui.components.AddTodoSheet
 import com.nevoit.cresto.ui.components.BottomSheet
 import com.nevoit.cresto.ui.components.DynamicSmallTitle
+import com.nevoit.cresto.ui.components.GlasenseButton
 import com.nevoit.cresto.ui.components.PageHeader
 import com.nevoit.cresto.ui.components.SwipeableTodoItem
 import com.nevoit.cresto.ui.components.WindowManagerComposable
@@ -160,97 +160,99 @@ fun HomeScreen() {
             hazeState = hazeState,
             surfaceColor = surfaceColor
         ) {
-            Row(
+            GlasenseButton(
+                enabled = true,
+                shape = ContinuousCapsule,
+                onClick = {},
                 modifier = Modifier
                     .padding(top = statusBarHeight, start = 12.dp)
-                    .height(48.dp)
-                    .background(
-                        onSurfaceContainer,
-                        shape = ContinuousCapsule
-                    ),
+                    .align(Alignment.TopStart),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = onSurfaceContainer,
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
             ) {
-                Box(
+                Row(
                     modifier = Modifier
-                        .height(48.dp)
-                        .width(48.dp),
-                    contentAlignment = Alignment.Center
+                        .height(48.dp),
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_magnifying_glass),
-                        contentDescription = "Due Date",
-                        modifier = Modifier.width(32.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .height(48.dp)
-                        .width(48.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_funnel),
-                        contentDescription = "Due Date",
-                        modifier = Modifier.width(32.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Box(
+                        modifier = Modifier
+                            .height(48.dp)
+                            .width(48.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_magnifying_glass),
+                            contentDescription = "Search all todos",
+                            modifier = Modifier.width(32.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .height(48.dp)
+                            .width(48.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_funnel),
+                            contentDescription = "Filter",
+                            modifier = Modifier.width(32.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
-            Box(
+            GlasenseButton(
+                enabled = true,
+                shape = CircleShape,
+                onClick = { showSheet = true },
                 modifier = Modifier
                     .padding(top = statusBarHeight, end = 12.dp)
-                    .clip(CircleShape)
-                    .height(48.dp)
-                    .width(48.dp)
-                    .background(
-                        onSurfaceContainer,
-                        shape = CircleShape
-                    )
-                    .align(Alignment.TopEnd)
-                    .clickable {
-                        showSheet = true
-                    },
-                contentAlignment = Alignment.Center
+                    .size(48.dp)
+                    .align(Alignment.TopEnd),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = onSurfaceContainer,
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_add_large),
-                    contentDescription = "Due Date",
-                    modifier = Modifier.width(32.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                    contentDescription = "Add new todo",
+                    modifier = Modifier.width(32.dp)
                 )
             }
+
         }
+
     }
     if (showSheet) {
         WindowManagerComposable(
             visible = true,
             onDismissRequest = { showSheet = false }) {
-
             BottomSheet(
-                visible = true,
-                shape = deviceCornerShape(bottomLeft = false, bottomRight = false),
+                shape = deviceCornerShape(
+                    bottomLeft = false,
+                    bottomRight = false
+                ),
                 containerColor = MaterialTheme.colorScheme.surface,
-                onDismiss = {},
-                onClose = {}) {
-                AddTodoSheet(
-                    onAddClick = { title, flagIndex, finalDate ->
-                        scope.launch {
-                            sheetState.hide()
-                        }.invokeOnCompletion {
-                            if (!sheetState.isVisible) {
-                                showSheet = false
-                            }
-                            viewModel.insert(
-                                TodoItem(
-                                    title = title,
-                                    flag = flagIndex,
-                                    dueDate = finalDate
-                                )
+                onDismiss = { showSheet = false },
+                onAddClick = { title, flagIndex, finalDate ->
+                    scope.launch {
+                        sheetState.hide()
+                    }.invokeOnCompletion {
+                        viewModel.insert(
+                            TodoItem(
+                                title = title,
+                                flag = flagIndex,
+                                dueDate = finalDate
                             )
-                        }
-                    },
-                )
-            }
+                        )
+                    }
+                })
+
+
         }
     }
 

@@ -4,14 +4,16 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PixelFormat
 import android.view.Gravity
-import android.view.KeyEvent
 import android.view.WindowManager
 import android.widget.FrameLayout
-import androidx.compose.material3.MaterialTheme
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCompositionContext
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -38,33 +40,31 @@ fun WindowManagerComposable(
 ) {
     if (!visible) return
 
-    val colorScheme = MaterialTheme.colorScheme
-    val typography = MaterialTheme.typography
-    val shapes = MaterialTheme.shapes
-
     val view = LocalView.current
     val context = LocalContext.current
     val windowManager =
         remember { context.getSystemService(Context.WINDOW_SERVICE) as WindowManager }
 
+    val compositionContext = rememberCompositionContext()
+
+    val currentOnDismissRequest by rememberUpdatedState(onDismissRequest)
+
     val interceptingView = remember(context) {
         BackPressInterceptingView(context).apply {
+            composeView.setParentCompositionContext(compositionContext)
             composeView.setContent(
                 {
-                    MaterialTheme(
-                        colorScheme = colorScheme,
-                        typography = typography,
-                        shapes = shapes
-                    ) {
-                        content()
+                    BackHandler {
+                        onDismissRequest()
                     }
+                    content()
                 })
 
         }
     }
 
-    LaunchedEffect(onDismissRequest) {
-        interceptingView.onDismissRequest = onDismissRequest
+    LaunchedEffect(interceptingView, currentOnDismissRequest) {
+        interceptingView.onDismissRequest = { currentOnDismissRequest() }
     }
 
     DisposableEffect(Unit) {
@@ -79,7 +79,7 @@ fun WindowManagerComposable(
             properties.height,
             WindowManager.LayoutParams.TYPE_APPLICATION_PANEL,
             properties.flags,
-            PixelFormat.TRANSLUCENT
+            PixelFormat.TRANSLUCENT,
         ).apply {
             gravity = properties.gravity
             token = view.applicationWindowToken
@@ -100,13 +100,5 @@ private class BackPressInterceptingView(context: Context) : FrameLayout(context)
 
     init {
         addView(composeView)
-    }
-
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
-            onDismissRequest?.invoke()
-            return true
-        }
-        return super.dispatchKeyEvent(event)
     }
 }

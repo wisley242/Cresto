@@ -49,6 +49,7 @@ import com.nevoit.cresto.CrestoApplication
 import com.nevoit.cresto.R
 import com.nevoit.cresto.settings.AIActivity
 import com.nevoit.cresto.settings.AppearanceActivity
+import com.nevoit.cresto.settings.DataStorageActivity
 import com.nevoit.cresto.ui.components.ConfigContainer
 import com.nevoit.cresto.ui.components.ConfigEntryItem
 import com.nevoit.cresto.ui.components.DynamicSmallTitle
@@ -166,7 +167,10 @@ fun SettingsScreen(aiViewModel: AiViewModel = viewModel()) {
                             color = Slate500,
                             icon = painterResource(R.drawable.ic_twotone_storage),
                             title = "Data & Storage",
-                            onClick = {}
+                            onClick = {
+                                val intent = Intent(context, DataStorageActivity::class.java)
+                                context.startActivity(intent)
+                            }
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         ConfigEntryItem(

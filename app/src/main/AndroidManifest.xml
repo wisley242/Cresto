@@ -34,6 +34,11 @@
             android:exported="false"
             android:parentActivityName=".MainActivity"
             android:theme="@style/Theme.Cresto" />
+        <activity
+            android:name=".settings.DataStorageActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.Cresto" />
     </application>
 
 </manifest>
