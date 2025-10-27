@@ -35,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -108,6 +107,7 @@ fun ColorCircle(
         if (onSurfaceColor == Color.Black) onSurfaceColor.copy(alpha = 0.2F) else onSurfaceColor.copy(
             alpha = 0.4F
         )
+
     LaunchedEffect(interactionSource) {
         interactionSource.interactions.collect { interaction ->
             when (interaction) {
@@ -150,7 +150,6 @@ fun ColorCircle(
     }
 
     Box(
-
         modifier = Modifier
             .graphicsLayer {
                 scaleX = scale.value
@@ -158,19 +157,18 @@ fun ColorCircle(
             }
             .size(20.dp)
             .background(color, CircleShape)
-            .clip(CircleShape)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
             ) {
-
             }
             .then(
                 if (isSelected || isPressed) {
                     Modifier.drawBehind {
                         drawCircle(
+                            radius = size.minDimension / 2.0f - 1.dp.toPx(),
                             color = strokeColor,
-                            style = Stroke(width = 4.dp.toPx())
+                            style = Stroke(width = 2.dp.toPx())
                         )
                     }
                 } else {
@@ -253,10 +251,12 @@ fun HorizontalPresetDatePicker(
         item {
             Spacer(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(1.dp))
                     .width(1.5.dp)
                     .height(20.dp)
-                    .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
+                    .background(
+                        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
+                        RoundedCornerShape(1.dp)
+                    )
             )
         }
         item {

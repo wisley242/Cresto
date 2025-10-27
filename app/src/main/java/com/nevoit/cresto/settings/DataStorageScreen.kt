@@ -2,7 +2,6 @@ package com.nevoit.cresto.settings
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,11 +12,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
@@ -38,6 +38,7 @@ import com.nevoit.cresto.ui.components.ConfigInfoHeader
 import com.nevoit.cresto.ui.components.ConfigItem
 import com.nevoit.cresto.ui.components.ConfigItemContainer
 import com.nevoit.cresto.ui.components.DynamicSmallTitle
+import com.nevoit.cresto.ui.components.GlasenseButton
 import com.nevoit.cresto.ui.theme.glasense.CalculatedColor
 import com.nevoit.cresto.ui.theme.glasense.Red500
 import com.nevoit.cresto.ui.theme.glasense.Slate500
@@ -171,27 +172,23 @@ fun DataStorageScreen() {
             surfaceColor = surfaceColor
         ) {
         }
-        Box(
+        GlasenseButton(
+            enabled = true,
+            shape = CircleShape,
+            onClick = { activity?.finish() },
             modifier = Modifier
                 .padding(top = statusBarHeight, start = 12.dp)
-                .clip(CircleShape)
-                .height(48.dp)
-                .width(48.dp)
-                .background(
-                    onSurfaceContainer,
-                    shape = CircleShape
-                )
-                .align(Alignment.TopStart)
-                .clickable {
-                    activity?.finish()
-                },
-            contentAlignment = Alignment.Center
+                .size(48.dp)
+                .align(Alignment.TopStart),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = onSurfaceContainer,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_forward_nav),
-                contentDescription = "Due Date",
-                modifier = Modifier.width(32.dp),
-                tint = MaterialTheme.colorScheme.primary
+                contentDescription = "Back",
+                modifier = Modifier.width(32.dp)
             )
         }
     }
