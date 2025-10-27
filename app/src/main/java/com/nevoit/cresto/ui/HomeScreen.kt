@@ -37,6 +37,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -53,6 +55,7 @@ import com.nevoit.cresto.ui.components.GlasenseButton
 import com.nevoit.cresto.ui.components.PageHeader
 import com.nevoit.cresto.ui.components.SwipeableTodoItem
 import com.nevoit.cresto.ui.components.WindowManagerComposable
+import com.nevoit.cresto.ui.menu.MenuItemData
 import com.nevoit.cresto.ui.theme.glasense.CalculatedColor
 import com.nevoit.cresto.util.deviceCornerShape
 import dev.chrisbanes.haze.ExperimentalHazeApi
@@ -62,7 +65,9 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeApi::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    showMenu: (anchorPosition: androidx.compose.ui.geometry.Offset, items: List<MenuItemData>) -> Unit
+) {
     val scope = rememberCoroutineScope()
 
     val application = LocalContext.current.applicationContext as CrestoApplication
@@ -102,6 +107,17 @@ fun HomeScreen() {
     }
 
     val isSmallTitleVisible by remember(thresholdPx) { derivedStateOf { ((lazyListState.firstVisibleItemIndex == 0) && (lazyListState.firstVisibleItemScrollOffset > thresholdPx)) || lazyListState.firstVisibleItemIndex > 0 } }
+
+    val menuItems = listOf(
+        MenuItemData("Set Flag", painterResource(R.drawable.ic_flag), onClick = { /* ... */ }),
+        MenuItemData(
+            "Delete",
+            painterResource(R.drawable.ic_trash),
+            isDestructive = true,
+            onClick = { /* ... */ })
+    )
+
+    var triggerPosition by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
 
     Box(
         modifier = Modifier
@@ -163,10 +179,13 @@ fun HomeScreen() {
             GlasenseButton(
                 enabled = true,
                 shape = ContinuousCapsule,
-                onClick = {},
+                onClick = { showMenu(triggerPosition, menuItems) },
                 modifier = Modifier
                     .padding(top = statusBarHeight, start = 12.dp)
-                    .align(Alignment.TopStart),
+                    .align(Alignment.TopStart)
+                    .onGloballyPositioned { layoutCoordinates ->
+                        triggerPosition = layoutCoordinates.positionInWindow()
+                    },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = onSurfaceContainer,
                     contentColor = MaterialTheme.colorScheme.primary
@@ -223,9 +242,7 @@ fun HomeScreen() {
                     modifier = Modifier.width(32.dp)
                 )
             }
-
         }
-
     }
     if (showSheet) {
         WindowManagerComposable(

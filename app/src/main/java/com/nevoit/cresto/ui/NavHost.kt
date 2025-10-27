@@ -7,15 +7,17 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.nevoit.cresto.ui.menu.MenuItemData
 
 @Composable
 fun AppNavHost(
-    navController: NavHostController
+    navController: NavHostController,
+    showMenu: (anchorPosition: androidx.compose.ui.geometry.Offset, items: List<MenuItemData>) -> Unit
 ) {
     val fadeDuration = 0
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route // 设置起始页
+        startDestination = Screen.Home.route
     ) {
         composable(
             route = Screen.Home.route,
@@ -26,7 +28,7 @@ fun AppNavHost(
                 fadeOut(animationSpec = tween(fadeDuration))
             }
         ) {
-            HomeScreen()
+            HomeScreen(showMenu = showMenu)
         }
 
         composable(
