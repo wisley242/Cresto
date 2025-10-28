@@ -3,6 +3,7 @@ package com.nevoit.cresto.ui
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,9 +37,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -107,17 +110,41 @@ fun HomeScreen(
     }
 
     val isSmallTitleVisible by remember(thresholdPx) { derivedStateOf { ((lazyListState.firstVisibleItemIndex == 0) && (lazyListState.firstVisibleItemScrollOffset > thresholdPx)) || lazyListState.firstVisibleItemIndex > 0 } }
+    val interactionSource = remember { MutableInteractionSource() }
 
     val menuItems = listOf(
-        MenuItemData("Set Flag", painterResource(R.drawable.ic_flag), onClick = { /* ... */ }),
+        MenuItemData("Set Flag", painterResource(R.drawable.ic_flag), onClick = {}),
         MenuItemData(
             "Delete",
             painterResource(R.drawable.ic_trash),
             isDestructive = true,
-            onClick = { /* ... */ })
+            onClick = {})
     )
 
-    var triggerPosition by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
+    val menuItemsFilter = listOf(
+        MenuItemData(
+            "Default",
+            painterResource(R.drawable.ic_calendar),
+            onClick = {}
+        ),
+        MenuItemData(
+            "Due Date",
+            painterResource(R.drawable.ic_calendar),
+            onClick = {}
+        ),
+        MenuItemData(
+            "Flag",
+            painterResource(R.drawable.ic_flag),
+            onClick = {}
+        ),
+        MenuItemData(
+            "Title",
+            painterResource(R.drawable.ic_rank),
+            onClick = {}
+        )
+    )
+
+    val dpPx = with(density) { 1.dp.toPx() }
 
     Box(
         modifier = Modifier
@@ -176,16 +203,14 @@ fun HomeScreen(
             hazeState = hazeState,
             surfaceColor = surfaceColor
         ) {
+            var coordinatesCaptured by remember { mutableStateOf<LayoutCoordinates?>(null) }
             GlasenseButton(
                 enabled = true,
                 shape = ContinuousCapsule,
-                onClick = { showMenu(triggerPosition, menuItems) },
+                onClick = {},
                 modifier = Modifier
                     .padding(top = statusBarHeight, start = 12.dp)
-                    .align(Alignment.TopStart)
-                    .onGloballyPositioned { layoutCoordinates ->
-                        triggerPosition = layoutCoordinates.positionInWindow()
-                    },
+                    .align(Alignment.TopStart),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = onSurfaceContainer,
                     contentColor = MaterialTheme.colorScheme.primary
@@ -211,7 +236,23 @@ fun HomeScreen(
                     Box(
                         modifier = Modifier
                             .height(48.dp)
-                            .width(48.dp),
+                            .width(48.dp)
+                            .onGloballyPositioned { coordinates ->
+                                coordinatesCaptured = coordinates
+                            }
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onTap = { localOffset ->
+                                        coordinatesCaptured?.let {
+                                            val position = Offset(
+                                                x = it.positionOnScreen().x,
+                                                y = it.positionOnScreen().y + it.size.height + 8 * dpPx
+                                            )
+                                            showMenu(position, menuItemsFilter)
+                                        }
+                                    }
+                                )
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(

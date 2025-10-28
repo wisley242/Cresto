@@ -1,69 +1,56 @@
 package com.nevoit.cresto.ui
 
 import android.os.Build
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.dropShadow
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush.Companion.verticalGradient
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawOutline
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.kyant.capsule.ContinuousRoundedRectangle
 import com.nevoit.cresto.R
 import com.nevoit.cresto.ui.components.CustomNavigationButton
 import com.nevoit.cresto.ui.gaussiangradient.smoothGradientMask
 import com.nevoit.cresto.ui.gaussiangradient.smoothGradientMaskFallback
+import com.nevoit.cresto.ui.menu.GlasenseMenu
 import com.nevoit.cresto.ui.menu.MenuItemData
 import com.nevoit.cresto.ui.menu.MenuState
 import com.nevoit.cresto.ui.theme.glasense.CalculatedColor
-import com.nevoit.cresto.ui.theme.glasense.Red500
 import com.nevoit.cresto.ui.theme.glasense.linearGradientMaskB2T70
 import com.nevoit.cresto.ui.theme.glasense.linearGradientMaskB2T90
-import com.nevoit.cresto.util.g2
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -71,7 +58,7 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeApi::class)
+@OptIn(ExperimentalHazeApi::class)
 @Composable
 fun TodoScreen() {
     val surfaceColor = CalculatedColor.hierarchicalBackgroundColor
@@ -90,6 +77,7 @@ fun TodoScreen() {
     }
 
     val density = LocalDensity.current
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -211,113 +199,57 @@ fun TodoScreen() {
                 }
             }
         }
+
+        val scaleAni = remember { Animatable(0.4f) }
+        val alphaAni = remember { Animatable(0f) }
+        var isMenuInComposition by remember { mutableStateOf(false) }
+
+        LaunchedEffect(menuState.isVisible) {
+            if (menuState.isVisible) {
+                delay(50)
+                isMenuInComposition = true
+                coroutineScope {
+                    launch { scaleAni.animateTo(1f, spring(0.8f, 450f, 0.001f)) }
+                    launch { alphaAni.animateTo(1f) }
+                }
+            } else {
+                delay(50)
+                coroutineScope {
+                    launch { scaleAni.animateTo(0.4f, spring(0.7f, 600f)) }
+                    launch { alphaAni.animateTo(0f) }
+                }
+                isMenuInComposition = false
+            }
+        }
+
         if (menuState.isVisible) {
             Box(
                 modifier = Modifier
-                    .offset(
-                        x = with(density) { menuState.anchorPosition.x.toDp() },
-                        y = with(density) { menuState.anchorPosition.y.toDp() + 48.dp }
-                    )
-                    .zIndex(99f)
-                    .dropShadow(
-                        ContinuousRoundedRectangle(16.dp, g2),
-                        shadow = Shadow(
-                            radius = 64.dp,
-                            color = Color.Black.copy(alpha = 0.1f),
-                            offset = DpOffset(0.dp, 16.dp)
-                        )
-                    )
-                    .clip(ContinuousRoundedRectangle(16.dp, g2))
-                    .hazeEffect(hazeState) {
-                        blurRadius = 64.dp
-                        noiseFactor = 0f
-                    }
+                    .fillMaxSize()
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = { dismissMenu() })
+            )
+        }
 
-                    .drawBehind {
-                        val size = this.size
-                        val outline = ContinuousRoundedRectangle(16.dp, g2).createOutline(
-                            size = size,
-                            layoutDirection = LayoutDirection.Ltr,
-                            density = density
-                        )
-                        val gradientBrush = verticalGradient(
-                            colorStops = arrayOf(
-                                0.0f to Color.White.copy(alpha = 1f),
-                                1.0f to Color.White.copy(alpha = 0.2f)
-                            )
-                        )
-                        drawOutline(
-                            outline = outline,
-                            brush = gradientBrush,
-                            style = Stroke(width = 3.dp.toPx()),
-                            blendMode = BlendMode.Plus,
-                            alpha = 0.08f
-                        )
-                    }
-            ) {
-                CustomMenuContent(items = menuState.items, onDismiss = dismissMenu)
-            }
+        if (isMenuInComposition) {
+
+            GlasenseMenu(
+                density = density,
+                menuState = menuState,
+                hazeState = hazeState,
+                onDismiss = dismissMenu,
+                modifier = Modifier
+                    .width(228.dp)
+                    .graphicsLayer(
+                        scaleX = scaleAni.value,
+                        scaleY = scaleAni.value,
+                        transformOrigin = TransformOrigin(0f, 0f)
+                    ),
+                alphaAni = alphaAni.value
+            )
         }
     }
 }
 
-@Composable
-private fun CustomMenuContent(items: List<MenuItemData>, onDismiss: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .width(200.dp)
-    ) {
-        Column() {
-            items.forEachIndexed { index, item ->
-                CustomMenuItem(
-                    text = item.text,
-                    icon = item.icon,
-                    isDestructive = item.isDestructive,
-                    onClick = {
-                        onDismiss()
-                        item.onClick()
-                    }
-                )
-                if (index < items.size - 1) {
-                    HorizontalDivider(
-                        thickness = 0.5.dp,
-                        color = Color.Gray.copy(alpha = 0.2f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CustomMenuItem(
-    text: String,
-    icon: Painter,
-    isDestructive: Boolean,
-    onClick: () -> Unit
-) {
-    val contentColor = if (isDestructive) Red500 else MaterialTheme.colorScheme.onBackground
-
-    Row(
-        modifier = Modifier
-            .height(48.dp)
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = text,
-            color = contentColor,
-            fontSize = 16.sp,
-            lineHeight = 16.sp
-        )
-        Icon(
-            painter = icon,
-            contentDescription = text,
-            tint = contentColor,
-            modifier = Modifier.size(20.dp)
-        )
-    }
-}
