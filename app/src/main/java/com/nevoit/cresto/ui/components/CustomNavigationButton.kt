@@ -14,32 +14,33 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.kyant.backdrop.backdrops.LayerBackdrop
+import com.kyant.backdrop.drawPlainBackdrop
+import com.kyant.backdrop.effects.blur
 import com.kyant.capsule.ContinuousCapsule
 import com.nevoit.cresto.ui.theme.glasense.NavigationButtonActiveColors
 import com.nevoit.cresto.ui.theme.glasense.NavigationButtonNormalColors
 import com.nevoit.cresto.util.g2
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
-import dev.chrisbanes.haze.HazeTint
-import dev.chrisbanes.haze.hazeEffect
 
 @Composable
 fun CustomNavigationButton(
     modifier: Modifier = Modifier,
     isActive: Boolean,
     onClick: () -> Unit,
-    hazeState: HazeState,
+    backdrop: LayerBackdrop,
     content: @Composable () -> Unit
 ) {
     val isSystemInDarkTheme = isSystemInDarkTheme()
     val finalModifier = if (isActive) {
         modifier
+            .fillMaxHeight()
             .dropShadow(
                 ContinuousCapsule,
                 Shadow(
@@ -49,9 +50,9 @@ fun CustomNavigationButton(
                     offset = DpOffset(0.dp, 8.dp)
                 )
             )
-            .fillMaxHeight()
     } else {
         modifier
+            .fillMaxHeight()
             .dropShadow(
                 ContinuousCapsule,
                 Shadow(
@@ -61,18 +62,13 @@ fun CustomNavigationButton(
                     offset = DpOffset(0.dp, 8.dp)
                 )
             )
-            .clip(ContinuousCapsule(g2))
-            .hazeEffect(hazeState) {
-                style = HazeStyle(
-                    backgroundColor = Color.White.copy(alpha = 0f),
-                    tint = null,
-                    blurRadius = 32.dp,
-                    noiseFactor = 0f,
-                    fallbackTint = HazeTint.Unspecified
-                )
-            }
-            .fillMaxHeight()
-
+            .drawPlainBackdrop(
+                backdrop = backdrop,
+                shape = { ContinuousCapsule },
+                effects = {
+                    blur(32f.dp.toPx(), TileMode.Decal)
+                }
+            )
     }
 
     GlasenseButton(

@@ -25,13 +25,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.nevoit.cresto.R
 import com.nevoit.cresto.ui.components.CustomNavigationButton
 import com.nevoit.cresto.ui.gaussiangradient.smoothGradientMask
@@ -64,6 +64,10 @@ fun TodoScreen() {
     val surfaceColor = CalculatedColor.hierarchicalBackgroundColor
     val navController = rememberNavController()
     val hazeState = rememberHazeState()
+    val backdrop = rememberLayerBackdrop {
+        drawRect(surfaceColor)
+        drawContent()
+    }
 
     var menuState by remember { mutableStateOf(MenuState()) }
 
@@ -86,6 +90,7 @@ fun TodoScreen() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .layerBackdrop(backdrop)
                 .hazeSource(hazeState, 0f)
                 .background(color = MaterialTheme.colorScheme.background)
         ) {
@@ -150,7 +155,7 @@ fun TodoScreen() {
                             }
                         }
                     },
-                    hazeState = hazeState
+                    backdrop = backdrop
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_list),
@@ -170,7 +175,7 @@ fun TodoScreen() {
                             }
                         }
                     },
-                    hazeState = hazeState
+                    backdrop = backdrop
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_star),
@@ -190,7 +195,7 @@ fun TodoScreen() {
                             }
                         }
                     },
-                    hazeState = hazeState
+                    backdrop = backdrop
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_gear),
@@ -232,22 +237,21 @@ fun TodoScreen() {
                         onClick = { dismissMenu() })
             )
         }
-
-        if (isMenuInComposition) {
-
+        if (isMenuInComposition || menuState.isVisible) {
             GlasenseMenu(
                 density = density,
                 menuState = menuState,
-                hazeState = hazeState,
+                backdrop = backdrop,
                 onDismiss = dismissMenu,
                 modifier = Modifier
                     .width(228.dp)
-                    .graphicsLayer(
-                        scaleX = scaleAni.value,
-                        scaleY = scaleAni.value,
-                        transformOrigin = TransformOrigin(0f, 0f)
-                    ),
-                alphaAni = alphaAni.value
+                /*.graphicsLayer {
+                    scaleX = scaleAni.value;
+                    scaleY = scaleAni.value;
+                    transformOrigin = TransformOrigin(0f, 0f)
+                }*/,
+                alphaAni = alphaAni.value,
+                scaleAni = scaleAni.value
             )
         }
     }

@@ -70,34 +70,21 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-    // ViewModel and LiveData
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4") // ViewModel for Compose
-    implementation(libs.androidx.lifecycle.runtime.ktx) // LifecycleScope
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")// collectAsStateWithLifecycle
-
-    // Room Database
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")
     implementation("androidx.room:room-runtime:2.8.2")
-    ksp("androidx.room:room-compiler:2.8.2") // Use ksp instead of kapt for Kotlin
-    implementation("androidx.room:room-ktx:2.8.2") // Kotlin Extensions and Coroutines support for Room
-
-    // Coroutines
+    ksp("androidx.room:room-compiler:2.8.2")
+    implementation("androidx.room:room-ktx:2.8.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
-
     implementation("androidx.compose.material:material-icons-extended-android:1.7.8")
-
     implementation("dev.chrisbanes.haze:haze:1.6.10")
-
     implementation("androidx.navigation:navigation-compose:2.9.5")
-
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")
-
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
-
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-
     implementation("com.tencent:mmkv:2.2.4")
-
     implementation("io.github.kyant0:capsule:2.1.1")
+    implementation("io.github.kyant0:backdrop:1.0.0")
 }
