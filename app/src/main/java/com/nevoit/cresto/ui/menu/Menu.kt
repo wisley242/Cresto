@@ -30,7 +30,6 @@ import androidx.compose.ui.graphics.Brush.Companion.verticalGradient
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -142,8 +141,8 @@ fun GlasenseMenu(
     backdrop: LayerBackdrop,
     onDismiss: () -> Unit,
     modifier: Modifier,
-    alphaAni: Float,
-    scaleAni: Float
+    alphaAni: () -> Float,
+    scaleAni: () -> Float
 ) {
     val isSystemInDarkTheme = isSystemInDarkTheme()
     Box(
@@ -162,20 +161,17 @@ fun GlasenseMenu(
                         alpha = 0.1f
                     ),
                     offset = DpOffset(0.dp, 16.dp),
-                    alpha = alphaAni
+                    alpha = alphaAni()
                 )
             )
             .drawPlainBackdrop(
                 backdrop = backdrop,
                 shape = { ContinuousRoundedRectangle(16.dp, g2) },
                 layerBlock = {
-                    transformOrigin = TransformOrigin(0f, 0f);
-                    scaleX = scaleAni;
-                    scaleY = scaleAni;
-                    alpha = alphaAni
+                    alpha = alphaAni()
                 },
                 effects = {
-                    blur(1f.dp.toPx(), TileMode.Mirror)
+                    blur(64f.dp.toPx(), TileMode.Mirror)
                 },
                 onDrawSurface = {
                     val outline = ContinuousRoundedRectangle(16.dp, g2).createOutline(

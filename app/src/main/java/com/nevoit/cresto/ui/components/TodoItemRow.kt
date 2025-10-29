@@ -65,8 +65,10 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun TodoItemRow(
     item: TodoItem,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier
 ) {
+
     Row(
         modifier = Modifier
             .defaultMinSize(minHeight = 68.dp)
@@ -74,7 +76,8 @@ fun TodoItemRow(
             .background(
                 color = CalculatedColor.hierarchicalSurfaceColor,
                 shape = ContinuousRoundedRectangle(12.dp, g2),
-            ),
+            )
+            .then(modifier),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Spacer(modifier = Modifier.width(12.dp))
@@ -150,7 +153,8 @@ fun SwipeableTodoItem(
     onExpand: () -> Unit,
     onCollapse: () -> Unit,
     onCheckedChange: (Boolean) -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    modifier: Modifier
 ) {
     var swipeState by remember { mutableStateOf(SwipeState.IDLE) }
     var initialSwipeState by remember { mutableStateOf(SwipeState.IDLE) }
@@ -287,10 +291,8 @@ fun SwipeableTodoItem(
                     orientation = Orientation.Horizontal,
                     state = rememberDraggableState { delta ->
                         coroutineScope.launch {
-                            // val newOffsetX = (offsetX + delta).coerceAtMost(0f)
                             val newOffsetX = (flingOffset.value + delta).coerceAtMost(0f)
                             flingOffset.snapTo(newOffsetX)
-                            // offsetX = newOffsetX
                             swipeState =
                                 if (newOffsetX < swipeThresholdPx) SwipeState.REVEALED else SwipeState.IDLE
                         }
@@ -344,7 +346,7 @@ fun SwipeableTodoItem(
                     }
                 )
         ) {
-            TodoItemRow(item, onCheckedChange)
+            TodoItemRow(item, onCheckedChange, modifier)
         }
     }
 }

@@ -78,7 +78,6 @@ dependencies {
     implementation("androidx.room:room-ktx:2.8.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
-    implementation("androidx.compose.material:material-icons-extended-android:1.7.8")
     implementation("dev.chrisbanes.haze:haze:1.6.10")
     implementation("androidx.navigation:navigation-compose:2.9.5")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")

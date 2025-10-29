@@ -9,19 +9,69 @@ import com.nevoit.cresto.repository.TodoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 class TodoViewModel(private val repository: TodoRepository) : ViewModel() {
-    // item basics
     val allTodos: StateFlow<List<TodoItem>> = repository.allTodos.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
+    /*select*/
+
+    private val _selectedItemIds = MutableStateFlow<Set<Int>>(emptySet())
+    val selectedItemIds: StateFlow<Set<Int>> = _selectedItemIds.asStateFlow()
+
+    private val _isSelectionModeActive = MutableStateFlow(false)
+    val isSelectionModeActive: StateFlow<Boolean> = _isSelectionModeActive.asStateFlow()
+
+    fun enterSelectionMode(initialItemId: Int) {
+        _isSelectionModeActive.value = true
+        _selectedItemIds.update { it + initialItemId }
+    }
+
+    fun toggleSelection(itemId: Int) {
+        _selectedItemIds.update { currentIds ->
+            val newIds = if (itemId in currentIds) currentIds - itemId else currentIds + itemId
+            if (newIds.isEmpty()) {
+                _isSelectionModeActive.value = false
+            }
+            newIds
+        }
+    }
+
+    fun clearSelections() {
+        _selectedItemIds.value = emptySet()
+        _isSelectionModeActive.value = false
+    }
+
+    fun deleteSelectedItems() {
+        val selectedIds = _selectedItemIds.value
+        val itemsToDelete = allTodos.value.filter { it.id in selectedIds }
+
+        viewModelScope.launch {
+            itemsToDelete.forEach { item ->
+                delete(item)
+            }
+            clearSelections()
+        }
+    }
+
+    val selectedItemCount: StateFlow<Int> = selectedItemIds.map { it.size }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0
+        )
+
+    /*select*/
     fun insert(item: TodoItem) = viewModelScope.launch {
         repository.insert(item)
     }
