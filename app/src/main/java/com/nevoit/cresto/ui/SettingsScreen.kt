@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -39,17 +38,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kyant.capsule.ContinuousCapsule
 import com.kyant.capsule.ContinuousRoundedRectangle
 import com.nevoit.cresto.CrestoApplication
 import com.nevoit.cresto.R
 import com.nevoit.cresto.settings.AIActivity
+import com.nevoit.cresto.settings.AboutActivity
 import com.nevoit.cresto.settings.AppearanceActivity
 import com.nevoit.cresto.settings.DataStorageActivity
+import com.nevoit.cresto.ui.components.AboutEntryItem
 import com.nevoit.cresto.ui.components.ConfigContainer
 import com.nevoit.cresto.ui.components.ConfigEntryItem
 import com.nevoit.cresto.ui.components.DynamicSmallTitle
@@ -57,7 +56,6 @@ import com.nevoit.cresto.ui.components.PageHeader
 import com.nevoit.cresto.ui.theme.glasense.AppButtonColors
 import com.nevoit.cresto.ui.theme.glasense.Blue500
 import com.nevoit.cresto.ui.theme.glasense.CalculatedColor
-import com.nevoit.cresto.ui.theme.glasense.Emerald500
 import com.nevoit.cresto.ui.theme.glasense.Pink400
 import com.nevoit.cresto.ui.theme.glasense.Purple500
 import com.nevoit.cresto.ui.theme.glasense.Slate500
@@ -185,58 +183,13 @@ fun SettingsScreen(aiViewModel: AiViewModel = viewModel()) {
             }
             item {
                 ConfigContainer(backgroundColor = hierarchicalSurfaceColor) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .background(
-                                        color = Emerald500,
-                                        shape = ContinuousRoundedRectangle(12.dp, g2)
-                                    )
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                            ) {
-                                Text(
-                                    text = "Cresto",
-                                    fontSize = 20.sp,
-                                    lineHeight = 20.sp,
-                                    fontWeight = FontWeight.W500,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                )
-                                Text(
-                                    text = "Developed by Nevoit",
-                                    fontSize = 12.sp,
-                                    lineHeight = 12.sp,
-                                    fontWeight = FontWeight.W400,
-                                    color = MaterialTheme.colorScheme.onBackground.copy(.5f),
-                                )
-                                Text(
-                                    text = "Version 0.0.1",
-                                    fontSize = 12.sp,
-                                    lineHeight = 12.sp,
-                                    fontWeight = FontWeight.W400,
-                                    color = MaterialTheme.colorScheme.onBackground.copy(.5f),
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Icon(
-                                painter = painterResource(R.drawable.ic_forward),
-                                tint = MaterialTheme.colorScheme.onBackground.copy(.2f),
-                                contentDescription = "Enter icon",
-                                modifier = Modifier
-                                    .align(Alignment.CenterVertically)
-                                    .height(40.dp)
-                                    .width(20.dp)
-                            )
+                    AboutEntryItem(
+                        icon = painterResource(R.drawable.cresto_foreground),
+                        onClick = {
+                            val intent = Intent(context, AboutActivity::class.java)
+                            context.startActivity(intent)
                         }
-                    }
+                    )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }

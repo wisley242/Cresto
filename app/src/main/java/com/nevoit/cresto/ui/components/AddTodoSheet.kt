@@ -220,98 +220,34 @@ fun AddTodoSheet(
                 )
             )
             Row(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .width(totalWidth)
+                    .height(48.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    modifier = Modifier
-                        .width(totalWidth)
-                        .height(48.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    GlasenseButtonAlt(
-                        enabled = true,
-                        shape = ContinuousCapsule(g2),
-                        onClick = {
-                            selectedButton = if (selectedButton == SelectedButton.DUE_DATE) {
-                                SelectedButton.NONE
-                            } else {
-                                SelectedButton.DUE_DATE
-                            }
-                        },
-                        modifier = Modifier
-                            .height(48.dp)
-                            .width(dueDateWidth),
-                        colors = AppButtonColors.secondary(),
-                        indication = true
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            with(this) {
-                                CustomAnimatedVisibility(
-                                    visible = selectedButton != SelectedButton.DUE_DATE,
-                                    enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
-                                        animationSpec = tween(delayMillis = 100),
-                                        initialScale = 0.9f
-                                    ),
-                                    exit = myFadeOut(animationSpec = tween(durationMillis = 100)) + myScaleOut(
-                                        animationSpec = tween(delayMillis = 100),
-                                        targetScale = 0.9f
-                                    )
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_calendar),
-                                        contentDescription = "Due Date",
-                                        modifier = Modifier.width(28.dp)
-                                    )
-                                }
-                                CustomAnimatedVisibility(
-                                    visible = selectedButton == SelectedButton.DUE_DATE,
-                                    enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
-                                        animationSpec = tween(delayMillis = 100),
-                                        initialScale = 0.9f
-                                    ),
-                                    exit = myFadeOut(animationSpec = tween(durationMillis = 100)) + myScaleOut(
-                                        animationSpec = tween(delayMillis = 100),
-                                        targetScale = 0.9f
-                                    )
-                                ) {
-                                    HorizontalPresetDatePicker(
-                                        initialDate = finalDate,
-                                        onDateSelected = {
-                                            finalDate = it
-                                            selectedButton = SelectedButton.NONE
-                                        }
-                                    )
-                                }
-                            }
+                GlasenseButtonAlt(
+                    enabled = true,
+                    shape = ContinuousCapsule(g2),
+                    onClick = {
+                        selectedButton = if (selectedButton == SelectedButton.DUE_DATE) {
+                            SelectedButton.NONE
+                        } else {
+                            SelectedButton.DUE_DATE
                         }
-
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    GlasenseButtonAlt(
-                        enabled = true,
-                        shape = ContinuousCapsule(g2),
-                        onClick = {
-                            selectedButton = if (selectedButton == SelectedButton.FLAG) {
-                                SelectedButton.NONE
-                            } else {
-                                SelectedButton.FLAG
-                            }
-                        },
-                        modifier = Modifier
-                            .height(48.dp)
-                            .width(flagWidth),
-                        colors = AppButtonColors.secondary(),
+                    },
+                    modifier = Modifier
+                        .height(48.dp)
+                        .width(dueDateWidth),
+                    colors = AppButtonColors.secondary(),
+                    indication = true
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        with(this) {
                             CustomAnimatedVisibility(
-                                visible = selectedButton != SelectedButton.FLAG,
+                                visible = selectedButton != SelectedButton.DUE_DATE,
                                 enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
                                     animationSpec = tween(delayMillis = 100),
                                     initialScale = 0.9f
@@ -321,24 +257,14 @@ fun AddTodoSheet(
                                     targetScale = 0.9f
                                 )
                             ) {
-                                val displayColor = getFlagColor(selectedIndex)
                                 Icon(
-                                    painter = if (displayColor == Color.Transparent) {
-                                        painterResource(id = R.drawable.ic_flag)
-                                    } else {
-                                        painterResource(id = R.drawable.ic_flag_fill)
-                                    },
-                                    contentDescription = "Flag",
-                                    modifier = Modifier.width(28.dp),
-                                    tint = if (displayColor == Color.Transparent) {
-                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5F)
-                                    } else {
-                                        displayColor
-                                    }
+                                    painter = painterResource(id = R.drawable.ic_calendar),
+                                    contentDescription = "Due Date",
+                                    modifier = Modifier.width(28.dp)
                                 )
                             }
                             CustomAnimatedVisibility(
-                                visible = selectedButton == SelectedButton.FLAG,
+                                visible = selectedButton == SelectedButton.DUE_DATE,
                                 enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
                                     animationSpec = tween(delayMillis = 100),
                                     initialScale = 0.9f
@@ -348,48 +274,116 @@ fun AddTodoSheet(
                                     targetScale = 0.9f
                                 )
                             ) {
-
-                                HorizontalFlagPicker(
-                                    selectedIndex = selectedIndex,
-                                    onIndexSelected = { newIndex ->
-                                        selectedIndex = newIndex
+                                HorizontalPresetDatePicker(
+                                    initialDate = finalDate,
+                                    onDateSelected = {
+                                        finalDate = it
                                         selectedButton = SelectedButton.NONE
                                     }
                                 )
-
                             }
                         }
                     }
 
-                    /*pacer(modifier = Modifier.width(12.dp))
-                    Button(
-                        enabled = true,
-                        shape = ContinuousCapsule(g2),
-                        onClick = {
-                            selectedButton = if (selectedButton == SelectedButton.HASHTAG) {
-                                SelectedButton.NONE
-                            } else {
-                                SelectedButton.HASHTAG
-                            }
-                        },
-                        modifier = Modifier
-                            .height(48.dp)
-                            .width(hashtagWidth),
-                        colors = AppButtonColors.secondary(),
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_hashtag),
-                            contentDescription = "Tag",
-                            modifier = Modifier.width(28.dp)
-                        )
-                    }*/
-
                 }
+                Spacer(modifier = Modifier.width(12.dp))
+                GlasenseButtonAlt(
+                    enabled = true,
+                    shape = ContinuousCapsule(g2),
+                    onClick = {
+                        selectedButton = if (selectedButton == SelectedButton.FLAG) {
+                            SelectedButton.NONE
+                        } else {
+                            SelectedButton.FLAG
+                        }
+                    },
+                    modifier = Modifier
+                        .height(48.dp)
+                        .width(flagWidth),
+                    colors = AppButtonColors.secondary(),
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CustomAnimatedVisibility(
+                            visible = selectedButton != SelectedButton.FLAG,
+                            enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
+                                animationSpec = tween(delayMillis = 100),
+                                initialScale = 0.9f
+                            ),
+                            exit = myFadeOut(animationSpec = tween(durationMillis = 100)) + myScaleOut(
+                                animationSpec = tween(delayMillis = 100),
+                                targetScale = 0.9f
+                            )
+                        ) {
+                            val displayColor = getFlagColor(selectedIndex)
+                            Icon(
+                                painter = if (displayColor == Color.Transparent) {
+                                    painterResource(id = R.drawable.ic_flag)
+                                } else {
+                                    painterResource(id = R.drawable.ic_flag_fill)
+                                },
+                                contentDescription = "Flag",
+                                modifier = Modifier.width(28.dp),
+                                tint = if (displayColor == Color.Transparent) {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5F)
+                                } else {
+                                    displayColor
+                                }
+                            )
+                        }
+                        CustomAnimatedVisibility(
+                            visible = selectedButton == SelectedButton.FLAG,
+                            enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
+                                animationSpec = tween(delayMillis = 100),
+                                initialScale = 0.9f
+                            ),
+                            exit = myFadeOut(animationSpec = tween(durationMillis = 100)) + myScaleOut(
+                                animationSpec = tween(delayMillis = 100),
+                                targetScale = 0.9f
+                            )
+                        ) {
+
+                            HorizontalFlagPicker(
+                                selectedIndex = selectedIndex,
+                                onIndexSelected = { newIndex ->
+                                    selectedIndex = newIndex
+                                    selectedButton = SelectedButton.NONE
+                                }
+                            )
+
+                        }
+                    }
+                }
+
+                /*pacer(modifier = Modifier.width(12.dp))
+                Button(
+                    enabled = true,
+                    shape = ContinuousCapsule(g2),
+                    onClick = {
+                        selectedButton = if (selectedButton == SelectedButton.HASHTAG) {
+                            SelectedButton.NONE
+                        } else {
+                            SelectedButton.HASHTAG
+                        }
+                    },
+                    modifier = Modifier
+                        .height(48.dp)
+                        .width(hashtagWidth),
+                    colors = AppButtonColors.secondary(),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_hashtag),
+                        contentDescription = "Tag",
+                        modifier = Modifier.width(28.dp)
+                    )
+                }*/
+
             }
 
         }
-
     }
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()

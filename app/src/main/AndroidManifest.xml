@@ -39,6 +39,11 @@
             android:exported="false"
             android:parentActivityName=".MainActivity"
             android:theme="@style/Theme.Cresto" />
+        <activity
+            android:name=".settings.AboutActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.Cresto" />
     </application>
 
 </manifest>
