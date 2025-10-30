@@ -65,7 +65,7 @@ fun ConfigInfoHeader(
                     tint = Color.White.copy(.5f),
                     contentDescription = "$title config entry",
                     modifier = Modifier
-                        .graphicsLayer(blendMode = BlendMode.Plus)
+                        .graphicsLayer { blendMode = BlendMode.Plus }
                         .fillMaxSize()
                         .blur(2.dp)
                 )
@@ -75,7 +75,7 @@ fun ConfigInfoHeader(
                 tint = Color.White,
                 contentDescription = "$title config entry",
                 modifier = Modifier
-                    .graphicsLayer(blendMode = BlendMode.Plus)
+                    .graphicsLayer { blendMode = BlendMode.Plus }
                     .fillMaxSize()
             )
         }

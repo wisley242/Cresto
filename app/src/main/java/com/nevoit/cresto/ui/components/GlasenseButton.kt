@@ -58,11 +58,11 @@ fun GlasenseButton(
         modifier = Modifier
             .then(modifier)
             .then(
-                if (animated) Modifier.graphicsLayer(
-                    scaleY = scale,
-                    scaleX = scale,
+                if (animated) Modifier.graphicsLayer {
+                    scaleY = scale
+                    scaleX = scale
                     transformOrigin = TransformOrigin.Center
-                ) else Modifier
+                } else Modifier
             )
             .then(if (animated) Modifier.clip(shape) else Modifier)
             .clickable(
@@ -162,11 +162,11 @@ fun GlasenseButtonAdaptable(
             .width(width())
             .height(height())
             .then(
-                if (animated) Modifier.graphicsLayer(
-                    scaleY = scale,
-                    scaleX = scale,
+                if (animated) Modifier.graphicsLayer {
+                    scaleY = scale
+                    scaleX = scale
                     transformOrigin = TransformOrigin.Center
-                ) else Modifier
+                } else Modifier
             )
             .then(modifier)
             .then(if (animated) Modifier.clip(shape) else Modifier)

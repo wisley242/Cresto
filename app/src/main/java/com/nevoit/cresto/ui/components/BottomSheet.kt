@@ -136,7 +136,9 @@ fun BottomSheet(
                     }
                 }
                 .align(alignment = Alignment.BottomCenter)
-                .graphicsLayer(translationY = offset.value)
+                .graphicsLayer {
+                    translationY = offset.value
+                }
         ) {
             Box(
                 modifier = Modifier

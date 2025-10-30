@@ -178,7 +178,7 @@ fun SwipeableTodoItem(
     )
 
     val scale = remember { Animatable(1f) }
-    val alpha = remember { Animatable(1f) }
+    val alphaAni = remember { Animatable(1f) }
 
     LaunchedEffect(isRevealed) {
         if (!isRevealed && flingOffset.value != 0f) {
@@ -220,7 +220,7 @@ fun SwipeableTodoItem(
                         coroutineScope.launch {
                             val jobs = listOf(
                                 launch { scale.animateTo(0.8f, tween(100)) },
-                                launch { alpha.animateTo(0f, tween(100)) },
+                                launch { alphaAni.animateTo(0f, tween(100)) },
                                 launch {
                                     deleteFlingOffset.animateTo(
                                         targetValue = -screenWidthPx - flingOffset.value,
@@ -241,11 +241,11 @@ fun SwipeableTodoItem(
                         }
                     },
                     modifier = Modifier
-                        .graphicsLayer(
-                            scaleX = scale.value,
-                            scaleY = scale.value,
-                            alpha = alpha.value,
-                        )
+                        .graphicsLayer {
+                            scaleX = scale.value
+                            scaleY = scale.value
+                            alpha = alphaAni.value
+                        }
                         .size(48.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Red500,

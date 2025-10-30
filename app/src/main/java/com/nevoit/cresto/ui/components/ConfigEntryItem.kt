@@ -76,7 +76,7 @@ fun ConfigEntryItem(
     }
     Row(
         modifier = Modifier
-            .graphicsLayer(alpha = animatedAlphaValue)
+            .graphicsLayer { alpha = animatedAlphaValue }
             .clickable(
                 enabled = true,
                 onClick = {
@@ -113,7 +113,7 @@ fun ConfigEntryItem(
                     tint = Color.White.copy(.5f),
                     contentDescription = "$title config entry",
                     modifier = Modifier
-                        .graphicsLayer(blendMode = BlendMode.Plus)
+                        .graphicsLayer { blendMode = BlendMode.Plus }
                         .fillMaxSize()
                         .blur(2.dp)
                 )
@@ -123,7 +123,7 @@ fun ConfigEntryItem(
                 tint = Color.White,
                 contentDescription = "$title config entry",
                 modifier = Modifier
-                    .graphicsLayer(blendMode = BlendMode.Plus)
+                    .graphicsLayer { blendMode = BlendMode.Plus }
                     .fillMaxSize()
             )
         }
@@ -185,7 +185,7 @@ fun AboutEntryItem(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .graphicsLayer(alpha = animatedAlphaValue)
+            .graphicsLayer { alpha = animatedAlphaValue }
             .clickable(
                 enabled = true,
                 onClick = {

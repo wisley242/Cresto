@@ -57,7 +57,7 @@ fun ColorModeSelector(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp)
-                    .graphicsLayer(alpha = transparency),
+                    .graphicsLayer { alpha = transparency },
                 horizontalArrangement = Arrangement.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
