@@ -70,7 +70,6 @@ fun AddTodoSheet(
     val keyboardController = LocalSoftwareKeyboardController.current
     val onAdd = {
         val text = state.text as String
-        val dueDate = LocalDate.now()
         if (text.isNotBlank()) {
             keyboardController?.hide()
             onAddClick(text, selectedIndex, finalDate)
