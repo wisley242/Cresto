@@ -62,6 +62,13 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
+/**
+ * A composable function that displays a single to-do item with a checkbox, title, due date, flag, and hashtag.
+ *
+ * @param item The [TodoItem] to display.
+ * @param onCheckedChange A callback that is invoked when the checkbox is checked or unchecked.
+ * @param modifier A [Modifier] for this composable.
+ */
 @Composable
 fun TodoItemRow(
     item: TodoItem,
@@ -86,6 +93,7 @@ fun TodoItemRow(
             onCheckedChange = onCheckedChange
         )
         Spacer(modifier = Modifier.width(12.dp))
+        // If the to-do item has no due date, display only the title.
         if (item.dueDate == null) {
             Text(
                 text = item.title,
@@ -96,6 +104,7 @@ fun TodoItemRow(
                     .padding(vertical = 12.dp)
             )
         } else {
+            // If the to-do item has a due date, display both the title and the due date.
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -115,6 +124,7 @@ fun TodoItemRow(
             }
         }
 
+        // If the to-do item has a flag, display the flag icon.
         if (getFlagColor(item.flag) != Color.Transparent) {
             Spacer(modifier = Modifier.width(12.dp))
             Box(
@@ -131,6 +141,7 @@ fun TodoItemRow(
             }
         }
         Spacer(modifier = Modifier.width(12.dp))
+        // If the to-do item has a hashtag, display it.
         Box(
             modifier = Modifier
                 .height(32.dp)
@@ -141,11 +152,32 @@ fun TodoItemRow(
     }
 }
 
+/**
+ * An enum representing the two possible states of the swipeable to-do item.
+ */
 enum class SwipeState {
+    /**
+     * The initial state where the to-do item is not swiped.
+     */
     IDLE,
+
+    /**
+     * The state where the to-do item is swiped to reveal the delete button.
+     */
     REVEALED
 }
 
+/**
+ * A composable that makes a [TodoItemRow] swipeable to reveal a delete button.
+ *
+ * @param item The [TodoItem] to display.
+ * @param isRevealed Whether the delete button is revealed.
+ * @param onExpand A callback that is invoked when the swipe is started.
+ * @param onCollapse A callback that is invoked when the swipe is cancelled.
+ * @param onCheckedChange A callback that is invoked when the checkbox is checked or unchecked.
+ * @param onDeleteClick A callback that is invoked when the delete button is clicked.
+ * @param modifier A [Modifier] for this composable.
+ */
 @Composable
 fun SwipeableTodoItem(
     item: TodoItem,
@@ -156,19 +188,28 @@ fun SwipeableTodoItem(
     onDeleteClick: () -> Unit,
     modifier: Modifier
 ) {
+    // The current swipe state of the to-do item.
     var swipeState by remember { mutableStateOf(SwipeState.IDLE) }
+    // The swipe state of the to-do item when the drag started.
     var initialSwipeState by remember { mutableStateOf(SwipeState.IDLE) }
     val coroutineScope = rememberCoroutineScope()
 
     val density = LocalDensity.current
+    // The width of the delete button in pixels.
     val revealButtonWidthPx = with(density) { 72.dp.toPx() }
+    // The swipe distance threshold to reveal the delete button.
     val swipeThresholdPx = with(density) { (-72 / 2 - 16).dp.toPx() }
+    // The swipe distance threshold to trigger the delete action.
     val deleteDistanceThresholdPx = revealButtonWidthPx * 2
+    // The velocity threshold to trigger the delete action.
     val velocityThreshold = with(density) { 500.dp.toPx() }
     val screenWidthPx = LocalWindowInfo.current.containerSize.width
 
+    // The fling offset of the to-do item.
     val flingOffset = remember { Animatable(0f) }
+    // The fling offset of the to-do item when it is being deleted.
     val deleteFlingOffset = remember { Animatable(0f) }
+    // The animated offset of the to-do item.
     val animatedOffset by animateFloatAsState(
         targetValue = flingOffset.value,
         animationSpec = spring(
@@ -177,9 +218,12 @@ fun SwipeableTodoItem(
         )
     )
 
+    // The scale of the delete button.
     val scale = remember { Animatable(1f) }
+    // The alpha of the delete button.
     val alphaAni = remember { Animatable(1f) }
 
+    // A LaunchedEffect that collapses the to-do item if it is not revealed.
     LaunchedEffect(isRevealed) {
         if (!isRevealed && flingOffset.value != 0f) {
             coroutineScope.launch {
@@ -192,6 +236,7 @@ fun SwipeableTodoItem(
         modifier = Modifier
             .fillMaxWidth()
     ) {
+        // The delete button.
         Box(
             modifier = Modifier
                 .fillMaxHeight()
@@ -219,8 +264,10 @@ fun SwipeableTodoItem(
                     onClick = {
                         coroutineScope.launch {
                             val jobs = listOf(
+                                // Animate the scale and alpha of the delete button.
                                 launch { scale.animateTo(0.8f, tween(100)) },
                                 launch { alphaAni.animateTo(0f, tween(100)) },
+                                // Animate the to-do item off the screen.
                                 launch {
                                     deleteFlingOffset.animateTo(
                                         targetValue = -screenWidthPx - flingOffset.value,
@@ -256,6 +303,7 @@ fun SwipeableTodoItem(
                     Box(
                         modifier = Modifier
                             .drawBehind() {
+                                // Draw a gradient border around the delete button.
                                 val gradientBrush = verticalGradient(
                                     colorStops = arrayOf(
                                         0.0f to Color.White.copy(alpha = 0.2f),
@@ -281,6 +329,7 @@ fun SwipeableTodoItem(
             }
         }
 
+        // The swipeable to-do item.
         Box(
             modifier = Modifier
                 .graphicsLayer {
@@ -291,6 +340,7 @@ fun SwipeableTodoItem(
                     orientation = Orientation.Horizontal,
                     state = rememberDraggableState { delta ->
                         coroutineScope.launch {
+                            // Update the fling offset and swipe state.
                             val newOffsetX = (flingOffset.value + delta).coerceAtMost(0f)
                             flingOffset.snapTo(newOffsetX)
                             swipeState =
@@ -298,6 +348,7 @@ fun SwipeableTodoItem(
                         }
                     },
                     onDragStarted = {
+                        // Save the initial swipe state and expand the to-do item.
                         initialSwipeState = swipeState
                         if (swipeState == SwipeState.IDLE) {
                             onExpand()
@@ -305,6 +356,7 @@ fun SwipeableTodoItem(
                     },
                     onDragStopped = { velocity ->
                         coroutineScope.launch {
+                            // If the to-do item is swiped far enough, delete it.
                             if (initialSwipeState == SwipeState.REVEALED && ((flingOffset.value < -deleteDistanceThresholdPx && velocity < -velocityThreshold) || (flingOffset.value < -deleteDistanceThresholdPx && velocity <= 0))) {
                                 coroutineScope.launch {
                                     swipeState = SwipeState.IDLE
@@ -325,6 +377,7 @@ fun SwipeableTodoItem(
                                     onDeleteClick()
                                 }
                             } else if ((flingOffset.value < -revealButtonWidthPx / 2) || (velocity < -velocityThreshold && flingOffset.value < -revealButtonWidthPx / 4)) {
+                                // If the to-do item is swiped far enough, reveal the delete button.
                                 swipeState = SwipeState.REVEALED
                                 coroutineScope.launch {
                                     flingOffset.animateTo(
@@ -338,6 +391,7 @@ fun SwipeableTodoItem(
                                 }
                                 onExpand()
                             } else {
+                                // Otherwise, collapse the to-do item.
                                 swipeState = SwipeState.IDLE
                                 coroutineScope.launch { flingOffset.snapTo(0f) }
                                 onCollapse()

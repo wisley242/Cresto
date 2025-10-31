@@ -55,6 +55,12 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
+/**
+ * A horizontal picker for selecting a color flag.
+ *
+ * @param selectedIndex The index of the currently selected color.
+ * @param onIndexSelected Callback for when a color is selected.
+ */
 @Composable
 fun HorizontalFlagPicker(
     selectedIndex: Int,
@@ -89,6 +95,13 @@ fun HorizontalFlagPicker(
     }
 }
 
+/**
+ * A single color circle item for the picker.
+ *
+ * @param color The color to display.
+ * @param isSelected Whether the circle is currently selected.
+ * @param onClick Callback for when the circle is clicked.
+ */
 @Composable
 fun ColorCircle(
     color: Color,
@@ -108,6 +121,7 @@ fun ColorCircle(
             alpha = 0.4F
         )
 
+    // Handle press and release animations.
     LaunchedEffect(interactionSource) {
         interactionSource.interactions.collect { interaction ->
             when (interaction) {
@@ -160,9 +174,10 @@ fun ColorCircle(
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
-            ) {
+            ) { // Empty clickable for interactionSource
             }
             .then(
+                // Draw a stroke if selected or pressed.
                 if (isSelected || isPressed) {
                     Modifier.drawBehind {
                         drawCircle(
@@ -178,20 +193,28 @@ fun ColorCircle(
     )
 }
 
+/**
+ * Helper to get the preset type for a given date.
+ */
 private fun getPresetTypeForDate(date: LocalDate?): Int {
     if (date == null) {
-        return 0
+        return 0 // None
     }
     val today = LocalDate.now()
     return when (date) {
-        today -> 1
-        today.plusDays(1) -> 2
-        today.plusWeeks(1) -> 3
-        else -> 4
+        today -> 1 // Today
+        today.plusDays(1) -> 2 // Tomorrow
+        today.plusWeeks(1) -> 3 // Next Week
+        else -> 4 // Custom
     }
 }
 
-
+/**
+ * A horizontal picker for preset dates like "Today" or "Tomorrow".
+ *
+ * @param initialDate The initially selected date.
+ * @param onDateSelected Callback for when a date is selected.
+ */
 @Composable
 fun HorizontalPresetDatePicker(
     initialDate: LocalDate?,
@@ -212,6 +235,7 @@ fun HorizontalPresetDatePicker(
         "Tomorrow",
         "Next Week"
     )
+    // Update state if the initial date changes.
     LaunchedEffect(initialDate) {
         selectedDate = initialDate
         selectedPreset = getPresetTypeForDate(initialDate)
@@ -220,12 +244,10 @@ fun HorizontalPresetDatePicker(
     LazyRow(
         modifier = Modifier
             .fillMaxSize()
-            .clickable(
+            .clickable( // Prevent clicks from passing through.
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
-            ) {
-                // Prevent from clicking the behind
-            },
+            ) {},
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
@@ -240,7 +262,7 @@ fun HorizontalPresetDatePicker(
                         1 -> LocalDate.now()
                         2 -> LocalDate.now().plusDays(1)
                         3 -> LocalDate.now().plusWeeks(1)
-                        else -> selectedDate // This case won't occur
+                        else -> selectedDate
                     }
                     selectedPreset = index
                     selectedDate = newDate
@@ -249,6 +271,7 @@ fun HorizontalPresetDatePicker(
             )
         }
         item {
+            // Divider
             Spacer(
                 modifier = Modifier
                     .width(1.5.dp)
@@ -262,8 +285,7 @@ fun HorizontalPresetDatePicker(
         item {
             val isCustomDateSelected = (selectedPreset == 4)
             val buttonText = if (isCustomDateSelected) {
-                val date = selectedDate
-                date?.format(DateTimeFormatter.ofPattern("MM/dd"))
+                selectedDate?.format(DateTimeFormatter.ofPattern("MM/dd"))
             } else {
                 "Custom"
             }
@@ -276,6 +298,7 @@ fun HorizontalPresetDatePicker(
         }
     }
 
+    // Show the date picker dialog when needed.
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -288,17 +311,18 @@ fun HorizontalPresetDatePicker(
                                 .atZone(ZoneOffset.UTC)
                                 .toLocalDate()
                             selectedDate = chosenDate
+                            // selectedPreset = 4 // Mark as custom date
                             onDateSelected(chosenDate)
                         }
                     },
                     enabled = datePickerState.selectedDateMillis != null
                 ) {
-                    Text("确定")
+                    Text("Done")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text("取消")
+                    Text("Cancel")
                 }
             }
         ) {
@@ -307,6 +331,9 @@ fun HorizontalPresetDatePicker(
     }
 }
 
+/**
+ * A selectable text box for the date picker presets.
+ */
 @Composable
 private fun SelectorBox(
     text: String,
@@ -314,11 +341,10 @@ private fun SelectorBox(
     onClick: () -> Unit
 ) {
     val scale = remember { Animatable(1f) }
-
     val interactionSource = remember { MutableInteractionSource() }
-
     var isPressed by remember { mutableStateOf(false) }
 
+    // Handle press and release animations.
     LaunchedEffect(interactionSource) {
         interactionSource.interactions.collect { interaction ->
             when (interaction) {
@@ -366,10 +392,9 @@ private fun SelectorBox(
                 scaleX = scale.value
                 scaleY = scale.value
             }
-            .clickable(interactionSource = interactionSource, indication = null) {
-
-            }
+            .clickable(interactionSource = interactionSource, indication = null) {}
             .then(
+                // Adjust alpha based on selection/press state.
                 if (isSelected || isPressed) {
                     Modifier.alpha(1f)
                 } else {
@@ -385,6 +410,9 @@ private fun SelectorBox(
     }
 }
 
+/**
+ * A selectable box specifically for the "Custom" date button.
+ */
 @Composable
 private fun DateSelectorBox(
     text: String,
@@ -392,11 +420,10 @@ private fun DateSelectorBox(
     onClick: () -> Unit
 ) {
     val scale = remember { Animatable(1f) }
-
     val interactionSource = remember { MutableInteractionSource() }
-
     var isPressed by remember { mutableStateOf(false) }
 
+    // Handle press and release animations.
     LaunchedEffect(interactionSource) {
         interactionSource.interactions.collect { interaction ->
             when (interaction) {
@@ -425,10 +452,9 @@ private fun DateSelectorBox(
                 scaleX = scale.value
                 scaleY = scale.value
             }
-            .clickable(interactionSource = interactionSource, indication = null) {
-
-            }
+            .clickable(interactionSource = interactionSource, indication = null) {}
             .then(
+                // Adjust alpha based on selection/press state.
                 if (isSelected || isPressed) {
                     Modifier.alpha(1f)
                 } else {

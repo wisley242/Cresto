@@ -1,6 +1,5 @@
 package com.nevoit.cresto.ui.components
 
-import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -42,6 +41,12 @@ import com.nevoit.cresto.util.deviceCornerShape
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+/**
+ * A composable function that displays a bottom sheet with custom animations.
+ *
+ * @param onDismiss Callback function to be invoked when the bottom sheet is dismissed.
+ * @param onAddClick Callback function to be invoked when the "add" button inside the sheet is clicked.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BottomSheet(
@@ -49,25 +54,32 @@ fun BottomSheet(
     onAddClick: (String, Int, LocalDate?) -> Unit
 ) {
     var columnHeightPx by remember { mutableIntStateOf(0) }
+    // State to control the visibility of the bottom sheet and its scrim.
     var isVisible by remember { mutableStateOf(false) }
+    // Animatable for the vertical offset of the bottom sheet.
     val offset = remember { Animatable(Float.MAX_VALUE) }
 
+    // Coroutine scope for launching animations.
     val scope = rememberCoroutineScope()
-    var navigationBarHeight by remember { mutableIntStateOf(0) }
 
+    var navigationBarHeight by remember { mutableIntStateOf(0) }
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val isImeVisible = WindowInsets.isImeVisible
 
+    // Trigger the enter animation when the composable is first composed.
     LaunchedEffect(Unit) {
         isVisible = true
     }
 
+    // Animate the bottom sheet into view when its height is measured.
     LaunchedEffect(columnHeightPx) {
         if (columnHeightPx > 0) {
             isVisible = true
+            // Snap to the initial off-screen position.
             offset.snapTo(targetValue = (columnHeightPx + navigationBarHeight).toFloat())
+            // Animate to the on-screen position.
             offset.animateTo(
                 targetValue = 0f,
                 animationSpec = tween(
@@ -77,14 +89,16 @@ fun BottomSheet(
                 )
             )
         }
-        Log.d("BOTTOM", "$columnHeightPx")
     }
+    // Main container for the bottom sheet and scrim.
     Box(modifier = Modifier.fillMaxSize()) {
+        // Scrim with animated visibility.
         CustomAnimatedVisibility(
             visible = isVisible,
             enter = myFadeIn(tween(200)),
             exit = myFadeOut(tween(200))
         ) {
+            // Background scrim that dismisses the sheet on click.
             Box(
                 modifier = Modifier
                     .clickable(
@@ -92,18 +106,23 @@ fun BottomSheet(
                         indication = null,
                         enabled = true,
                         onClick = {
-                            keyboardController?.hide()
-                            scope.launch {
-                                isVisible = false
-                                offset.animateTo(
-                                    targetValue = (columnHeightPx + navigationBarHeight).toFloat(),
-                                    animationSpec = tween(
-                                        durationMillis = 200,
-                                        delayMillis = if (isImeVisible) 100 else 0,
-                                        easing = FastOutSlowInEasing
+                            if (isImeVisible) {
+                                // Close keyboard first.
+                                keyboardController?.hide()
+                            } else {
+                                scope.launch {
+                                    isVisible = false
+                                    // Animate the sheet out of view.
+                                    offset.animateTo(
+                                        targetValue = (columnHeightPx + navigationBarHeight).toFloat(),
+                                        animationSpec = tween(
+                                            durationMillis = 200,
+                                            delayMillis = if (isImeVisible) 100 else 0,
+                                            easing = FastOutSlowInEasing
+                                        )
                                     )
-                                )
-                                onDismiss()
+                                    onDismiss()
+                                }
                             }
                         }
                     )
@@ -111,18 +130,22 @@ fun BottomSheet(
                     .fillMaxSize()
             )
         }
+        // The bottom sheet content itself.
         Column(
             modifier = Modifier
+                // Empty clickable to prevent clicks from passing through to the scrim.
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     enabled = true,
                     onClick = {}
                 )
+                // Handle back press to dismiss the sheet.
                 .onKeyEvent { keyEvent ->
                     if (keyEvent.type == KeyEventType.KeyUp && (keyEvent.key == Key.Back || keyEvent.nativeKeyEvent.keyCode == android.view.KeyEvent.KEYCODE_BACK)) {
                         scope.launch {
                             isVisible = false
+                            // Animate the sheet out of view.
                             offset.animateTo(
                                 targetValue = (columnHeightPx + navigationBarHeight).toFloat(),
                                 animationSpec = tween(
@@ -138,13 +161,16 @@ fun BottomSheet(
                     }
                 }
                 .align(alignment = Alignment.BottomCenter)
+                // Apply the vertical offset animation.
                 .graphicsLayer {
                     translationY = offset.value
                 }
         ) {
+            // Container for the AddTodoSheet content.
             Box(
                 modifier = Modifier
                     .onSizeChanged { size ->
+                        // Measure the height of the content.
                         columnHeightPx = size.height
                     }
                     .background(
@@ -156,14 +182,16 @@ fun BottomSheet(
                     )
                     .fillMaxWidth()
             ) {
+                // The actual sheet content.
                 AddTodoSheet(onAddClick = { title, flagIndex, finalDate ->
                     scope.launch {
                         isVisible = false
+                        // Animate the sheet out of view.
                         offset.animateTo(
                             targetValue = (columnHeightPx + navigationBarHeight).toFloat(),
                             animationSpec = tween(
                                 durationMillis = 200,
-                                delayMillis = if (isImeVisible) 100 else 0,
+                                delayMillis = if (isImeVisible) 100 else 0, // If the keyboard is visible, animating the bottom sheet too quick can feel jarring and unsmooth.
                                 easing = FastOutSlowInEasing
                             )
                         )
@@ -174,6 +202,7 @@ fun BottomSheet(
                     keyboardController?.hide()
                     scope.launch {
                         isVisible = false
+                        // Animate the sheet out of view.
                         offset.animateTo(
                             targetValue = (columnHeightPx + navigationBarHeight).toFloat(),
                             animationSpec = tween(
@@ -186,9 +215,11 @@ fun BottomSheet(
                     }
                 })
             }
+            // Spacer to account for navigation bar and IME padding.
             Box(
                 modifier = Modifier
                     .onSizeChanged { size ->
+                        // Measure the height of the navigation bar area.
                         navigationBarHeight = size.height
                     }
                     .background(color = MaterialTheme.colorScheme.surface)

@@ -1,5 +1,7 @@
+// Package declaration for the settings screen
 package com.nevoit.cresto.settings
 
+// Import necessary libraries and components
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -51,64 +53,68 @@ import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
+/**
+ * This composable function defines the Appearance screen.
+ * It allows users to customize the look and feel of the application.
+ * It uses experimental APIs for Material 3 and Haze effects.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeApi::class)
 @Composable
 fun AppearanceScreen(settingsViewModel: SettingsViewModel = viewModel()) {
+    // Get the current activity instance to allow finishing the screen
     val activity = LocalActivity.current
 
+    // Calculate the height of the status bar to adjust layout
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val density = LocalDensity.current
+    // Calculate the scroll threshold in pixels for showing/hiding the small title
     val thresholdPx = if (statusBarHeight > 0.dp) {
         with(density) {
             (statusBarHeight + 24.dp).toPx()
         }
     } else 0f
 
+    // Remember the state for the Haze effect, a library for blurring content behind a surface
     val hazeState = rememberHazeState()
 
+    // Get colors from the app's custom theme
     val onSurfaceContainer = CalculatedColor.onSurfaceContainer
     val onBackground = MaterialTheme.colorScheme.onBackground
-
     val surfaceColor = CalculatedColor.hierarchicalBackgroundColor
     val hierarchicalSurfaceColor = CalculatedColor.hierarchicalSurfaceColor
 
+    // Remember the state for the lazy list to control scrolling
     val lazyListState = rememberLazyListState()
 
+    // Determine if the small title should be visible based on the scroll position
     val isSmallTitleVisible by remember(thresholdPx) { derivedStateOf { ((lazyListState.firstVisibleItemIndex == 0) && (lazyListState.firstVisibleItemScrollOffset > thresholdPx)) || lazyListState.firstVisibleItemIndex > 0 } }
 
+    // Get the pixel value for 1dp, used for drawing divider lines
     val dp = with(density) {
         1.dp.toPx()
     }
 
+    // Determine the current color mode (dark or light) based on the background color
     val colorMode = if (MaterialTheme.colorScheme.onBackground == Color.Black) 0 else 1
 
+    // State variables for the various appearance settings, managed by the ViewModel
     var isCustomPrimaryColor by settingsViewModel.isCustomPrimaryColorEnabled
     var isUseDynamicColorScheme by settingsViewModel.isUseDynamicColor
     var isLiteMode by settingsViewModel.isLiteMode
     var isLiquidGlass by settingsViewModel.isLiquidGlass
     val currentMode by settingsViewModel.colorMode
 
-
-
-
-
-
-
-
-
-
-
-
-
+    // Root container for the screen, filling the entire available space
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(surfaceColor)
     ) {
+        // A vertically scrolling list that only composes and lays out the currently visible items
         LazyColumn(
             state = lazyListState,
             modifier = Modifier
-                .hazeSource(hazeState, 0f)
+                .hazeSource(hazeState, 0f) // This view is the source for the Haze effect
                 .fillMaxSize()
                 .padding(0.dp)
                 .background(surfaceColor),
@@ -119,9 +125,11 @@ fun AppearanceScreen(settingsViewModel: SettingsViewModel = viewModel()) {
                 bottom = 136.dp
             )
         ) {
+            // Spacer item at the top of the list to push content below the top bar and back button
             item {
                 Box(modifier = Modifier.padding(top = 48.dp + statusBarHeight + 12.dp))
             }
+            // Header item for the Appearance section
             item {
                 ConfigInfoHeader(
                     color = Blue500,
@@ -132,6 +140,7 @@ fun AppearanceScreen(settingsViewModel: SettingsViewModel = viewModel()) {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
+            // Item for selecting the color mode (light/dark/system)
             item {
                 ColorModeSelector(
                     backgroundColor = hierarchicalSurfaceColor,
@@ -141,6 +150,7 @@ fun AppearanceScreen(settingsViewModel: SettingsViewModel = viewModel()) {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
+            // Item container for color-related settings
             item {
                 ConfigItemContainer(
                     title = "Color",
@@ -153,6 +163,7 @@ fun AppearanceScreen(settingsViewModel: SettingsViewModel = viewModel()) {
                                 onCheckedChange = { settingsViewModel.onCustomPrimaryColorChanged(it) })
                         }
                         Spacer(modifier = Modifier.height(8.dp))
+                        // Visual divider line
                         Spacer(
                             modifier = Modifier
                                 .drawBehind {
@@ -175,6 +186,7 @@ fun AppearanceScreen(settingsViewModel: SettingsViewModel = viewModel()) {
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }
+            // Item container for design-related settings
             item {
                 ConfigItemContainer(
                     title = "Design",
@@ -187,6 +199,7 @@ fun AppearanceScreen(settingsViewModel: SettingsViewModel = viewModel()) {
                                 onCheckedChange = { settingsViewModel.onLiteModeChanged(it) })
                         }
                         Spacer(modifier = Modifier.height(8.dp))
+                        // Visual divider line
                         Spacer(
                             modifier = Modifier
                                 .drawBehind {
@@ -210,19 +223,22 @@ fun AppearanceScreen(settingsViewModel: SettingsViewModel = viewModel()) {
                 Spacer(modifier = Modifier.height(12.dp))
             }
         }
+        // A small title that dynamically appears at the top when the user scrolls down
         DynamicSmallTitle(
             modifier = Modifier.align(Alignment.TopCenter),
-            title = "Settings",
+            title = "Appearance",
             statusBarHeight = statusBarHeight,
             isVisible = isSmallTitleVisible,
             hazeState = hazeState,
             surfaceColor = surfaceColor
         ) {
+            // This lambda is empty as the component handles its own content
         }
+        // Back button positioned at the top-start of the screen
         GlasenseButton(
             enabled = true,
             shape = CircleShape,
-            onClick = { activity?.finish() },
+            onClick = { activity?.finish() }, // Closes the current activity, navigating back
             modifier = Modifier
                 .padding(top = statusBarHeight, start = 12.dp)
                 .size(48.dp)

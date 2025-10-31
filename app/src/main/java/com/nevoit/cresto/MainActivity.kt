@@ -18,14 +18,19 @@ import com.nevoit.cresto.ui.TodoScreen
 import com.nevoit.cresto.ui.overscroll.OffsetOverscrollFactory
 import com.nevoit.cresto.ui.theme.glasense.GlasenseTheme
 
+/**
+ * The main activity of the application.
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // This makes the app display behind the system bars.
         WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge()
         setContent {
             GlasenseTheme {
                 val animationScope = rememberCoroutineScope()
+                // Create a custom overscroll factory.
                 val overscrollFactory = remember {
                     OffsetOverscrollFactory(
                         orientation = Orientation.Vertical,
@@ -33,6 +38,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
+                // Provide the custom overscroll factory to the composable tree.
                 CompositionLocalProvider(
                     LocalOverscrollFactory provides overscrollFactory
                 ) {
@@ -40,6 +46,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
+                        // Display the main screen of the application.
                         TodoScreen()
                     }
                 }

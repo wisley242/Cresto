@@ -49,9 +49,16 @@ import com.nevoit.cresto.ui.components.ZeroHeightDivider
 import com.nevoit.cresto.ui.theme.glasense.Red500
 import com.nevoit.cresto.util.g2
 
+/**
+ * Composable that arranges a list of menu items vertically.
+ *
+ * @param items The list of [MenuItemData] to display.
+ * @param onDismiss Lambda to be called when a menu item is clicked, typically to close the menu.
+ */
 @Composable
 fun CustomMenuContent(items: List<MenuItemData>, onDismiss: () -> Unit) {
     val isSystemInDarkTheme = isSystemInDarkTheme()
+    // Define divider color based on the current theme.
     val dividerColor = if (isSystemInDarkTheme) Color.White.copy(.1f) else Color.Black.copy(.1f)
 
     Column {
@@ -65,6 +72,7 @@ fun CustomMenuContent(items: List<MenuItemData>, onDismiss: () -> Unit) {
                     item.onClick()
                 }
             )
+            // Add a divider between items, but not after the last one.
             if (index < items.size - 1) {
                 ZeroHeightDivider(
                     color = dividerColor,
@@ -76,6 +84,14 @@ fun CustomMenuContent(items: List<MenuItemData>, onDismiss: () -> Unit) {
     }
 }
 
+/**
+ * A single menu item with an icon, text, and a custom click feedback effect.
+ *
+ * @param text The text to display for the menu item.
+ * @param icon The icon painter for the menu item.
+ * @param isDestructive If true, the item is styled with a "destructive action" color (e.g., red).
+ * @param onClick Lambda to be executed when the item is clicked.
+ */
 @Composable
 private fun CustomMenuItem(
     text: String,
@@ -83,10 +99,13 @@ private fun CustomMenuItem(
     isDestructive: Boolean,
     onClick: () -> Unit
 ) {
+    // Determine the content color based on whether the action is destructive.
     val contentColor = if (isDestructive) Red500 else MaterialTheme.colorScheme.onBackground
     val interactionSource = remember { MutableInteractionSource() }
+    // Animatable for the press feedback effect's alpha.
     val alpha = remember { Animatable(0f) }
 
+    // Observe interactions to animate the press feedback.
     LaunchedEffect(interactionSource) {
         interactionSource.interactions.collect { interaction ->
             when (interaction) {
@@ -108,12 +127,14 @@ private fun CustomMenuItem(
         modifier = Modifier
             .height(48.dp)
             .fillMaxWidth()
+            // Draw a background overlay with an animated alpha for press feedback.
             .drawBehind {
                 drawRect(
                     color = Color.Black.copy(0.1f),
                     alpha = alpha.value
                 )
             }
+            // Use a custom interaction source and disable the default ripple effect.
             .clickable(interactionSource = interactionSource, onClick = onClick, indication = null)
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -134,6 +155,17 @@ private fun CustomMenuItem(
     }
 }
 
+/**
+ * A menu with GlasenseBackgroundBlur Style, using [LayerBackdrop] for blurred background.
+ *
+ * @param density The screen density, used for pixel conversions.
+ * @param menuState State object containing menu items and anchor position.
+ * @param backdrop The [LayerBackdrop] instance for rendering the background effect.
+ * @param onDismiss Lambda to be called to dismiss the menu.
+ * @param modifier The modifier to be applied to the menu container.
+ * @param alphaAni A lambda providing the current alpha for animations.
+ * @param scaleAni A lambda providing the current scale for animations (unused in this specific implementation but kept for API consistency).
+ */
 @Composable
 fun GlasenseMenu(
     density: Density,
@@ -147,11 +179,12 @@ fun GlasenseMenu(
     val isSystemInDarkTheme = isSystemInDarkTheme()
     Box(
         modifier = Modifier
+            // Position the menu at the anchor point defined in menuState.
             .offset(
                 x = with(density) { menuState.anchorPosition.x.toDp() },
                 y = with(density) { menuState.anchorPosition.y.toDp() }
             )
-            .zIndex(99f)
+            .zIndex(99f) // Ensure the menu appears above other content.
             .then(modifier)
             .dropShadow(
                 RoundedCornerShape(16.dp),
@@ -164,6 +197,7 @@ fun GlasenseMenu(
                     alpha = alphaAni()
                 )
             )
+            // Core of the blur effect, drawing a blurred version of the content behind it.
             .drawPlainBackdrop(
                 backdrop = backdrop,
                 shape = { ContinuousRoundedRectangle(16.dp, g2) },
@@ -173,6 +207,7 @@ fun GlasenseMenu(
                 effects = {
                     blur(64f.dp.toPx(), TileMode.Mirror)
                 },
+                // Custom drawing on top of the blurred background to create stunning colors.
                 onDrawSurface = {
                     val outline = ContinuousRoundedRectangle(16.dp, g2).createOutline(
                         size = size,
@@ -185,6 +220,7 @@ fun GlasenseMenu(
                             1.0f to Color.White.copy(alpha = 0.2f)
                         )
                     )
+                    // The drawing logic is different for light and dark themes.
                     if (!isSystemInDarkTheme) {
                         drawRect(
                             brush = SolidColor(Color(0xFF272727).copy(alpha = 0.2f)),
@@ -245,6 +281,7 @@ fun GlasenseMenu(
                 }
             )
     ) {
+        // Display the actual menu items.
         CustomMenuContent(items = menuState.items, onDismiss = onDismiss)
     }
 }

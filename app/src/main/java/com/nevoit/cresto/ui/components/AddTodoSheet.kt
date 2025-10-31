@@ -55,29 +55,45 @@ import com.nevoit.cresto.ui.theme.glasense.getFlagColor
 import com.nevoit.cresto.util.g2
 import java.time.LocalDate
 
+/**
+ * Enum to represent the currently selected button in the AddTodoSheet.
+ */
 enum class SelectedButton {
     DUE_DATE, FLAG, HASHTAG, NONE
 }
 
+/**
+ * A composable function that provides a sheet for adding a new todo item.
+ *
+ * @param onAddClick Callback function to be invoked when the add button is clicked.
+ * It provides the todo text, selected flag index, and due date.
+ * @param onClose Callback function to be invoked when the close button is clicked.
+ */
 @Composable
 fun AddTodoSheet(
     onAddClick: (String, Int, LocalDate?) -> Unit,
     onClose: () -> Unit
 ) {
+    // State for tracking the currently selected button (due date, flag, etc.)
     var selectedButton by remember { mutableStateOf(SelectedButton.NONE) }
+
     val state = rememberTextFieldState()
+    // Focus requester to programmatically request focus for the text field.
     val focusRequester = remember { FocusRequester() }
     var selectedIndex by remember { mutableIntStateOf(0) }
     var finalDate by remember { mutableStateOf<LocalDate?>(null) }
+
     val keyboardController = LocalSoftwareKeyboardController.current
+
     val onAdd = {
-        val text = state.text as String
+        val text = state.text.toString()
         if (text.isNotBlank()) {
             keyboardController?.hide()
             onAddClick(text, selectedIndex, finalDate)
         }
     }
 
+    // Main layout
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -85,7 +101,9 @@ fun AddTodoSheet(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(12.dp))
+        // Header row with close, title, and add buttons.
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            // Close button.
             GlasenseButton(
                 enabled = true,
                 shape = CircleShape,
@@ -101,12 +119,14 @@ fun AddTodoSheet(
                     modifier = Modifier.width(28.dp)
                 )
             }
+            // Title text.
             Text(
                 text = "New Todo",
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.headlineSmall
             )
+            // Add button with a custom border.
             GlasenseButton(
                 enabled = true,
                 shape = CircleShape,
@@ -149,6 +169,7 @@ fun AddTodoSheet(
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
+        // Text field
         Box(
             modifier = Modifier
                 .height(48.dp)
@@ -169,6 +190,7 @@ fun AddTodoSheet(
                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
             )
+            // AI functions icon.
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -185,6 +207,7 @@ fun AddTodoSheet(
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
+        // Buttons for due date, flag, and hashtag.
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
@@ -192,11 +215,13 @@ fun AddTodoSheet(
         ) {
             val totalWidth = this.maxWidth
 
+            // Calculate the width of the buttons based on the selected state.
             val collapsedSize = 48.dp
             val spacerSize = 12.dp
             val expandedWidth = totalWidth - (collapsedSize * 1) - (spacerSize * 1)
             val defaultWidth = (totalWidth - (spacerSize * 1)) / 2
 
+            // Animate the width of the due date button.
             val dueDateWidth by animateDpAsState(
                 targetValue = when (selectedButton) {
                     SelectedButton.DUE_DATE -> expandedWidth
@@ -208,6 +233,7 @@ fun AddTodoSheet(
                     stiffness = 300f
                 )
             )
+            // Animate the width of the flag button.
             val flagWidth by animateDpAsState(
                 targetValue = when (selectedButton) {
                     SelectedButton.FLAG -> expandedWidth
@@ -219,6 +245,7 @@ fun AddTodoSheet(
                     stiffness = 300f
                 )
             )
+            // Animate the width of the hashtag button.
             val hashtagWidth by animateDpAsState(
                 targetValue = when (selectedButton) {
                     SelectedButton.HASHTAG -> expandedWidth
@@ -236,6 +263,7 @@ fun AddTodoSheet(
                     .height(48.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                // Due date button.
                 GlasenseButtonAlt(
                     enabled = true,
                     shape = ContinuousCapsule(g2),
@@ -256,48 +284,50 @@ fun AddTodoSheet(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        with(this) {
-                            CustomAnimatedVisibility(
-                                visible = selectedButton != SelectedButton.DUE_DATE,
-                                enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
-                                    animationSpec = tween(delayMillis = 100),
-                                    initialScale = 0.9f
-                                ),
-                                exit = myFadeOut(animationSpec = tween(durationMillis = 100)) + myScaleOut(
-                                    animationSpec = tween(delayMillis = 100),
-                                    targetScale = 0.9f
-                                )
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_calendar),
-                                    contentDescription = "Due Date",
-                                    modifier = Modifier.width(28.dp)
-                                )
-                            }
-                            CustomAnimatedVisibility(
-                                visible = selectedButton == SelectedButton.DUE_DATE,
-                                enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
-                                    animationSpec = tween(delayMillis = 100),
-                                    initialScale = 0.9f
-                                ),
-                                exit = myFadeOut(animationSpec = tween(durationMillis = 100)) + myScaleOut(
-                                    animationSpec = tween(delayMillis = 100),
-                                    targetScale = 0.9f
-                                )
-                            ) {
-                                HorizontalPresetDatePicker(
-                                    initialDate = finalDate,
-                                    onDateSelected = {
-                                        finalDate = it
-                                        selectedButton = SelectedButton.NONE
-                                    }
-                                )
-                            }
+                        // Animated visibility for the due date icon.
+                        CustomAnimatedVisibility(
+                            visible = selectedButton != SelectedButton.DUE_DATE,
+                            enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
+                                animationSpec = tween(delayMillis = 100),
+                                initialScale = 0.9f
+                            ),
+                            exit = myFadeOut(animationSpec = tween(durationMillis = 100)) + myScaleOut(
+                                animationSpec = tween(delayMillis = 100),
+                                targetScale = 0.9f
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_calendar),
+                                contentDescription = "Due Date",
+                                modifier = Modifier.width(28.dp)
+                            )
+                        }
+                        // Animated visibility for the date picker.
+                        CustomAnimatedVisibility(
+                            visible = selectedButton == SelectedButton.DUE_DATE,
+                            enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
+                                animationSpec = tween(delayMillis = 100),
+                                initialScale = 0.9f
+                            ),
+                            exit = myFadeOut(animationSpec = tween(durationMillis = 100)) + myScaleOut(
+                                animationSpec = tween(delayMillis = 100),
+                                targetScale = 0.9f
+                            )
+                        ) {
+                            HorizontalPresetDatePicker(
+                                initialDate = finalDate,
+                                onDateSelected = {
+                                    finalDate = it
+                                    selectedButton = SelectedButton.NONE
+                                }
+                            )
+
                         }
                     }
 
                 }
                 Spacer(modifier = Modifier.width(12.dp))
+                // Flag button.
                 GlasenseButtonAlt(
                     enabled = true,
                     shape = ContinuousCapsule(g2),
@@ -317,6 +347,7 @@ fun AddTodoSheet(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
+                        // Animated visibility for the flag icon.
                         CustomAnimatedVisibility(
                             visible = selectedButton != SelectedButton.FLAG,
                             enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
@@ -344,6 +375,7 @@ fun AddTodoSheet(
                                 }
                             )
                         }
+                        // Animated visibility for the flag picker.
                         CustomAnimatedVisibility(
                             visible = selectedButton == SelectedButton.FLAG,
                             enter = myFadeIn(animationSpec = tween(delayMillis = 100)) + myScaleIn(
@@ -396,6 +428,7 @@ fun AddTodoSheet(
 
         }
     }
+    // Request focus for the text field when the sheet is launched.
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }

@@ -2,14 +2,20 @@ package com.nevoit.cresto.settings.util
 
 import com.tencent.mmkv.MMKV
 
+/**
+ * A singleton object for managing app settings using MMKV.
+ * This provides a centralized and efficient way to store and retrieve user preferences.
+ */
 object SettingsManager {
 
+    // Get the default MMKV instance for data storage.
     private val mmkv = MMKV.defaultMMKV()
+
+    // Define constant keys for storing and retrieving settings to avoid typos.
     private const val KEY_CUSTOM_PRIMARY_COLOR_ENABLED = "custom_primary_color_enabled"
     private const val KEY_USE_DYNAMIC_COLOR = "use_dynamic_color_enabled"
     private const val KEY_LITE_MODE = "lite_mode_enabled"
     private const val KEY_LIQUID_GLASS = "liquid_glass_enabled"
-
     private const val KEY_COLOR_MODE = "color_mode"
 
     var isCustomPrimaryColorEnabled: Boolean
@@ -43,14 +49,14 @@ object SettingsManager {
         }
 
 
-    // 示例 3: 字符串 (String) - 用户名
+    // Example 3: String - Username
     /*var username: String
-        get() = mmkv.decodeString(KEY_USERNAME, "") ?: "" // 提供一个默认值空字符串
+        get() = mmkv.decodeString(KEY_USERNAME, "") ?: "" // Provides a default value of an empty string
         set(value) = mmkv.encode(KEY_USERNAME, value)
 
-    // 示例 4: 整数 (Int) - 同步频率（分钟）
+    // Example 4: Int - Sync Frequency (minutes)
     var syncFrequency: Int
-        get() = mmkv.decodeInt(KEY_SYNC_FREQUENCY, 15) // 提供一个默认值 15
+        get() = mmkv.decodeInt(KEY_SYNC_FREQUENCY, 15) // Provides a default value of 15
         set(value) = mmkv.encode(KEY_SYNC_FREQUENCY, value)*/
 
 }

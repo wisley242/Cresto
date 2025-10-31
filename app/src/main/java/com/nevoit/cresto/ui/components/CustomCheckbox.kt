@@ -56,6 +56,7 @@ private fun AnimatedCheckmarkIcon(
     )
 }
 
+// !!!Needs refactor.
 @Composable
 fun CustomCheckbox(
     checked: Boolean,

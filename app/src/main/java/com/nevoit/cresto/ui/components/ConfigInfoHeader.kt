@@ -28,6 +28,18 @@ import androidx.compose.ui.unit.sp
 import com.kyant.capsule.ContinuousRoundedRectangle
 import com.nevoit.cresto.util.g2
 
+/**
+ * A composable function that displays a header for a configuration screen.
+ * It includes an icon, a title, and some informational text, all within a styled container.
+ *
+ * @param brush An optional Brush to be used as the background for the icon.
+ * @param color An optional Color to be used as the background for the icon. This takes precedence over `brush`.
+ * @param backgroundColor The background color for the entire header container.
+ * @param icon The Painter for the icon to be displayed.
+ * @param title The main title text of the header.
+ * @param info A short informational text displayed below the title.
+ * @param enableGlow If true, a glowing effect is added to the icon for emphasis. Defaults to false.
+ */
 @Composable
 fun ConfigInfoHeader(
     brush: Brush? = null,
@@ -38,16 +50,19 @@ fun ConfigInfoHeader(
     info: String,
     enableGlow: Boolean? = false
 ) {
+    // The main container column.
     Column(
         modifier = Modifier
             .background(color = backgroundColor, shape = ContinuousRoundedRectangle(12.dp, g2))
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Box to display the icon with a circular background and optional glow.
         Box(
             modifier = Modifier
                 .padding(top = 24.dp)
                 .size(48.dp)
+                // Apply either a brush or a solid color as the background, or no background if both are null.
                 .then(
                     if (brush != null) Modifier.background(
                         brush = brush,
@@ -59,17 +74,19 @@ fun ConfigInfoHeader(
                 ),
             contentAlignment = Alignment.Center
         ) {
+            // If enabled, draw a blurred version of the icon behind the main icon to create a glow effect.
             if (enableGlow == true) {
                 Icon(
                     painter = icon,
                     tint = Color.White.copy(.5f),
-                    contentDescription = "$title config entry",
+                    contentDescription = null,
                     modifier = Modifier
                         .graphicsLayer { blendMode = BlendMode.Plus }
                         .fillMaxSize()
                         .blur(2.dp)
                 )
             }
+            // The main icon itself.
             Icon(
                 painter = icon,
                 tint = Color.White,
@@ -79,6 +96,7 @@ fun ConfigInfoHeader(
                     .fillMaxSize()
             )
         }
+        // The main title text.
         Text(
             text = title,
             style = MaterialTheme.typography.headlineMedium,
@@ -88,6 +106,7 @@ fun ConfigInfoHeader(
             maxLines = 1,
             textAlign = TextAlign.Center
         )
+        // The secondary informational text, with reduced opacity.
         Text(
             text = info,
             fontWeight = FontWeight.Normal,

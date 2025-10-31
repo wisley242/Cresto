@@ -31,6 +31,17 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kyant.capsule.ContinuousCapsule
 
+/**
+ * A custom button with press animations.
+ *
+ * @param enabled Controls the enabled state of the button.
+ * @param shape The shape of the button.
+ * @param onClick The callback to be invoked when the button is clicked.
+ * @param modifier The modifier to be applied to the button.
+ * @param colors The colors for the button in different states.
+ * @param animated Whether to enable press animations.
+ * @param content The content to be displayed inside the button.
+ */
 @Composable
 fun GlasenseButton(
     enabled: Boolean = true,
@@ -45,6 +56,7 @@ fun GlasenseButton(
     val backgroundColor = if (enabled) colors.containerColor else colors.disabledContainerColor
     val interactionSource = remember { MutableInteractionSource() }
 
+    // Animate scale and alpha for press feedback.
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 1.2f else 1.0f,
@@ -57,6 +69,7 @@ fun GlasenseButton(
     Box(
         modifier = Modifier
             .then(modifier)
+            // Apply scale animation for press effect.
             .then(
                 if (animated) Modifier.graphicsLayer {
                     scaleY = scale
@@ -65,6 +78,7 @@ fun GlasenseButton(
                 } else Modifier
             )
             .then(if (animated) Modifier.clip(shape) else Modifier)
+            // Handle click events.
             .clickable(
                 enabled = enabled,
                 interactionSource = interactionSource,
@@ -74,6 +88,7 @@ fun GlasenseButton(
             )
             .height(48.dp)
             .background(color = backgroundColor, shape = shape)
+            // Draw a white flash overlay on press.
             .then(
                 if (animated) {
                     Modifier.drawBehind {
@@ -96,6 +111,17 @@ fun GlasenseButton(
     }
 }
 
+/**
+ * An alternative, simpler version of [GlasenseButton] without press animations.
+ *
+ * @param enabled Controls the enabled state of the button.
+ * @param shape The shape of the button.
+ * @param onClick The callback to be invoked when the button is clicked.
+ * @param modifier The modifier to be applied to the button.
+ * @param colors The colors for the button in different states.
+ * @param indication Whether to show a ripple indication on click.
+ * @param content The content to be displayed inside the button.
+ */
 @Composable
 fun GlasenseButtonAlt(
     enabled: Boolean = true,
@@ -112,6 +138,7 @@ fun GlasenseButtonAlt(
 
     Box(
         modifier = Modifier
+            // Handle click events.
             .clickable(
                 interactionSource = interactionSource,
                 onClick = { onClick() },
@@ -129,6 +156,21 @@ fun GlasenseButtonAlt(
     }
 }
 
+/**
+ * A version of [GlasenseButton] with an adaptable size.
+ *
+ * @param width A lambda that returns the width of the button.
+ * @param height A lambda that returns the height of the button.
+ * @param padding Padding to be applied around the button.
+ * @param tint An optional tint color for the content.
+ * @param enabled Controls the enabled state of the button.
+ * @param shape The shape of the button.
+ * @param onClick The callback to be invoked when the button is clicked.
+ * @param modifier The modifier to be applied to the button.
+ * @param colors The colors for the button in different states.
+ * @param animated Whether to enable press animations.
+ * @param content The content to be displayed inside the button.
+ */
 @Composable
 fun GlasenseButtonAdaptable(
     width: () -> Dp,
@@ -147,6 +189,7 @@ fun GlasenseButtonAdaptable(
     val backgroundColor = if (enabled) colors.containerColor else colors.disabledContainerColor
     val interactionSource = remember { MutableInteractionSource() }
 
+    // Animate scale and alpha for press feedback.
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 1.2f else 1.0f,
@@ -161,6 +204,7 @@ fun GlasenseButtonAdaptable(
             .padding(padding)
             .width(width())
             .height(height())
+            // Apply scale animation for press effect.
             .then(
                 if (animated) Modifier.graphicsLayer {
                     scaleY = scale
@@ -170,6 +214,7 @@ fun GlasenseButtonAdaptable(
             )
             .then(modifier)
             .then(if (animated) Modifier.clip(shape) else Modifier)
+            // Handle click events.
             .clickable(
                 enabled = enabled,
                 interactionSource = interactionSource,
@@ -179,6 +224,7 @@ fun GlasenseButtonAdaptable(
             )
             .height(48.dp)
             .background(color = backgroundColor, shape = shape)
+            // Draw a white flash overlay on press.
             .then(
                 if (animated) {
                     Modifier.drawBehind {

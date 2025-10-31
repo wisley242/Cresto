@@ -19,18 +19,24 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+// Defines a fade animation.
 data class Fade(val animationSpec: FiniteAnimationSpec<Float>)
 
+// Defines a scale animation.
 data class Scale(
     val animationSpec: FiniteAnimationSpec<Float>,
     val scale: Float
 )
 
+// Defines a blur animation.
 data class Blur(
     val animationSpec: FiniteAnimationSpec<Dp>,
     val radius: Dp
 )
 
+/**
+ * Represents the entering transition for CustomAnimatedVisibility.
+ */
 data class MyEnterTransition(
     val fade: Fade? = null,
     val scale: Scale? = null,
@@ -45,6 +51,9 @@ data class MyEnterTransition(
     }
 }
 
+/**
+ * Represents the exiting transition for CustomAnimatedVisibility.
+ */
 data class MyExitTransition(
     val fade: Fade? = null,
     val scale: Scale? = null,
@@ -59,37 +68,46 @@ data class MyExitTransition(
     }
 }
 
-
+// Creates a fade-in enter transition.
 fun myFadeIn(animationSpec: FiniteAnimationSpec<Float> = tween(300)): MyEnterTransition =
     MyEnterTransition(fade = Fade(animationSpec = animationSpec))
 
+// Creates a scale-in enter transition.
 fun myScaleIn(
     animationSpec: FiniteAnimationSpec<Float> = spring(stiffness = Spring.StiffnessMedium),
     initialScale: Float = 0.9f
 ): MyEnterTransition =
     MyEnterTransition(scale = Scale(animationSpec = animationSpec, scale = initialScale))
 
+// Creates a blur-in enter transition.
 fun myBlurIn(
     animationSpec: FiniteAnimationSpec<Dp> = tween(300),
     initialRadius: Dp = 8.dp
 ): MyEnterTransition =
     MyEnterTransition(blur = Blur(animationSpec = animationSpec, radius = initialRadius))
 
+// Creates a fade-out exit transition.
 fun myFadeOut(animationSpec: FiniteAnimationSpec<Float> = tween(300)): MyExitTransition =
     MyExitTransition(fade = Fade(animationSpec = animationSpec))
 
+// Creates a scale-out exit transition.
 fun myScaleOut(
     animationSpec: FiniteAnimationSpec<Float> = spring(stiffness = Spring.StiffnessMedium),
     targetScale: Float = 0.9f
 ): MyExitTransition =
     MyExitTransition(scale = Scale(animationSpec = animationSpec, scale = targetScale))
 
+// Creates a blur-out exit transition.
 fun myBlurOut(
     animationSpec: FiniteAnimationSpec<Dp> = tween(300),
     targetRadius: Dp = 8.dp
 ): MyExitTransition =
     MyExitTransition(blur = Blur(animationSpec = animationSpec, radius = targetRadius))
 
+/**
+ * A custom animated visibility composable that animates content in and out.
+ * This version uses a MutableTransitionState to control visibility.
+ */
 @Composable
 fun CustomAnimatedVisibility(
     visibleState: MutableTransitionState<Boolean>,
@@ -100,6 +118,7 @@ fun CustomAnimatedVisibility(
 ) {
     val transition = rememberTransition(visibleState, label = "MyAnimatedVisibility")
 
+    // Only compose the content if it's visible or animating.
     if (visibleState.currentState || visibleState.targetState) {
 
         val hiddenStateScale = when {
@@ -112,6 +131,7 @@ fun CustomAnimatedVisibility(
             else -> exit.blur?.radius ?: 0.dp
         }
 
+        // Animate alpha property.
         val alpha by transition.animateFloat(
             label = "alpha",
             transitionSpec = {
@@ -120,6 +140,7 @@ fun CustomAnimatedVisibility(
             }
         ) { isVisible -> if (isVisible) 1f else 0f }
 
+        // Animate scale property.
         val scale by transition.animateFloat(
             label = "scale",
             transitionSpec = {
@@ -130,6 +151,7 @@ fun CustomAnimatedVisibility(
             if (isVisible) 1f else hiddenStateScale
         }
 
+        // Animate blur radius property.
         val blurRadius by transition.animateDp(
             label = "blur",
             transitionSpec = {
@@ -140,6 +162,7 @@ fun CustomAnimatedVisibility(
             if (isVisible) 0.dp else hiddenStateBlur
         }
 
+        // Apply animations to the content box.
         Box(
             modifier = modifier
                 .then(if (blurRadius > 0.dp) Modifier.blur(radius = blurRadius) else Modifier)
@@ -154,6 +177,10 @@ fun CustomAnimatedVisibility(
     }
 }
 
+/**
+ * A custom animated visibility composable that animates content in and out.
+ * This version uses a simple Boolean to control visibility.
+ */
 @Composable
 fun CustomAnimatedVisibility(
     visible: Boolean,

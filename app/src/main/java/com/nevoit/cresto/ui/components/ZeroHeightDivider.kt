@@ -12,6 +12,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+/**
+ * A composable that draws a horizontal line with zero height.
+ * This is useful for creating dividers that don't take up any vertical space in the layout.
+ *
+ * @param color The color of the divider line.
+ * @param width The stroke width of the divider line.
+ * @param modifier The modifier to be applied to the divider.
+ * @param blendMode The blend mode to be applied when drawing the line.
+ */
 @Composable
 fun ZeroHeightDivider(
     color: Color,

@@ -12,17 +12,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+/**
+ * A simple header for a page, displaying a title.
+ *
+ * @param title The title to be displayed.
+ * @param statusBarHeight The height of the system status bar, used for padding.
+ */
 @Composable
 fun PageHeader(
     title: String,
     statusBarHeight: Dp
 ) {
+    // A box that provides padding for the status bar and sets a fixed height.
     Box(
         modifier = Modifier
             .padding(top = statusBarHeight)
             .height(128.dp + statusBarHeight)
             .fillMaxWidth()
     ) {
+        // The title text, aligned to the bottom start of the box.
         Text(
             text = title,
             style = MaterialTheme.typography.headlineLarge,

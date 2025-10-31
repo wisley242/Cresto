@@ -16,6 +16,13 @@ import androidx.compose.ui.unit.sp
 import com.kyant.capsule.ContinuousRoundedRectangle
 import com.nevoit.cresto.util.g2
 
+/**
+ * A container for configuration items.
+ *
+ * @param title An optional title for the container.
+ * @param backgroundColor The background color of the container.
+ * @param content The content of the container.
+ */
 @Composable
 fun ConfigItemContainer(
     title: String? = null,
@@ -23,6 +30,7 @@ fun ConfigItemContainer(
     content: @Composable () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
+        // Display the title if it's provided.
         if (title != null) {
             Text(
                 text = title,
@@ -39,11 +47,13 @@ fun ConfigItemContainer(
                     .fillMaxWidth()
             )
         }
+        // The main container box with background and shape.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(color = backgroundColor, shape = ContinuousRoundedRectangle(12.dp, g2))
         ) {
+            // Inner box with padding for the content.
             Box(
                 modifier = Modifier
                     .fillMaxSize()

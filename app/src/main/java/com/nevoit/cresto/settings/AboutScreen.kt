@@ -1,5 +1,7 @@
+// Package declaration for the settings screen
 package com.nevoit.cresto.settings
 
+// Import necessary libraries and components
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import androidx.activity.compose.LocalActivity
@@ -65,36 +67,49 @@ import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
+/**
+ * This composable function defines the About screen.
+ * It displays information about the app, developers, and version.
+ * It uses an experimental API for Haze effects.
+ */
 @OptIn(ExperimentalHazeApi::class)
 @Composable
 fun AboutScreen() {
+    // Get the current activity instance to allow finishing the screen
     val activity = LocalActivity.current
 
+    // Calculate the height of the status bar to adjust layout
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val density = LocalDensity.current
+    // Calculate the scroll threshold in pixels for showing/hiding the small title
     val thresholdPx = if (statusBarHeight > 0.dp) {
         with(density) {
             (statusBarHeight + 24.dp).toPx()
         }
     } else 0f
 
+    // Remember the state for the Haze effect, a library for blurring content behind a surface
     val hazeState = rememberHazeState()
 
+    // Get colors from the app's custom theme
     val onSurfaceContainer = CalculatedColor.onSurfaceContainer
     val onBackground = MaterialTheme.colorScheme.onBackground
-
     val surfaceColor = CalculatedColor.hierarchicalBackgroundColor
     val hierarchicalSurfaceColor = CalculatedColor.hierarchicalSurfaceColor
 
+    // Remember the state for the lazy list to control scrolling
     val lazyListState = rememberLazyListState()
 
+    // Determine if the small title should be visible based on the scroll position
     val isSmallTitleVisible by remember(thresholdPx) { derivedStateOf { ((lazyListState.firstVisibleItemIndex == 0) && (lazyListState.firstVisibleItemScrollOffset > thresholdPx)) || lazyListState.firstVisibleItemIndex > 0 } }
 
+    // Get the pixel value for 1dp, used for drawing divider lines
     val dp = with(density) {
         1.dp.toPx()
     }
     val context = LocalContext.current
 
+    // Retrieve the app's package information to display version name and code
     val packageInfo: PackageInfo? = remember {
         try {
             val packageName = context.packageName
@@ -104,15 +119,17 @@ fun AboutScreen() {
             null
         }
     }
+    // Root container for the screen, filling the entire available space
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(surfaceColor)
     ) {
+        // A vertically scrolling list that only composes and lays out the currently visible items
         LazyColumn(
             state = lazyListState,
             modifier = Modifier
-                .hazeSource(hazeState, 0f)
+                .hazeSource(hazeState, 0f) // This view is the source for the Haze effect
                 .fillMaxSize()
                 .padding(0.dp)
                 .background(surfaceColor),
@@ -123,9 +140,11 @@ fun AboutScreen() {
                 bottom = 136.dp
             )
         ) {
+            // Spacer item at the top of the list to push content below the top bar and back button
             item {
                 Box(modifier = Modifier.padding(top = 48.dp + statusBarHeight + 12.dp))
             }
+            // An item that displays a background image for the About screen
             item {
                 Column(
                     modifier = Modifier
@@ -142,6 +161,7 @@ fun AboutScreen() {
                                 layoutDirection = LayoutDirection.Ltr,
                                 density = density
                             )
+                            // Draw a white glowing border around the image
                             drawOutline(
                                 outline = outline,
                                 style = Stroke(4.dp.toPx()),
@@ -155,12 +175,14 @@ fun AboutScreen() {
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }
+            // Item container for displaying developer information
             item {
                 ConfigItemContainer(
                     backgroundColor = hierarchicalSurfaceColor,
                     title = "Developer"
                 ) {
                     Column {
+                        // Row for the main developer's information
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -193,6 +215,7 @@ fun AboutScreen() {
                                     fontWeight = FontWeight.W400,
                                     color = MaterialTheme.colorScheme.onBackground.copy(.5f),
                                 )
+                                // Row for displaying developer roles/tags
                                 Row(
                                     modifier = Modifier
                                         .offset((-4).dp)
@@ -249,12 +272,14 @@ fun AboutScreen() {
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
+                        // Visual divider line
                         ZeroHeightDivider(
                             color = onBackground.copy(.1f), width = 1.dp,
                             modifier = Modifier,
                             blendMode = BlendMode.SrcOver
                         )
                         Spacer(modifier = Modifier.height(8.dp))
+                        // Row for the overscroll animation developer's information
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -329,6 +354,7 @@ fun AboutScreen() {
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }
+            // Item for displaying version information
             item {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
@@ -359,6 +385,7 @@ fun AboutScreen() {
                                 .fillMaxSize()
                                 .padding(horizontal = 12.dp, vertical = 8.dp)
                         ) {
+                            // Row displaying the version name
                             Row(
                                 modifier = Modifier.height(32.dp),
                                 verticalAlignment = Alignment.CenterVertically
@@ -390,6 +417,7 @@ fun AboutScreen() {
                                         .weight(1f)
                                 )
                             }
+                            // Row displaying the version code
                             Row(
                                 modifier = Modifier.height(32.dp),
                                 verticalAlignment = Alignment.CenterVertically
@@ -427,6 +455,7 @@ fun AboutScreen() {
                 Spacer(modifier = Modifier.height(12.dp))
             }
         }
+        // A small title that dynamically appears at the top when the user scrolls down
         DynamicSmallTitle(
             modifier = Modifier.align(Alignment.TopCenter),
             title = "About",
@@ -436,10 +465,11 @@ fun AboutScreen() {
             surfaceColor = surfaceColor
         ) {
         }
+        // Back button positioned at the top-start of the screen
         GlasenseButton(
             enabled = true,
             shape = CircleShape,
-            onClick = { activity?.finish() },
+            onClick = { activity?.finish() }, // Closes the current activity, navigating back
             modifier = Modifier
                 .padding(top = statusBarHeight, start = 12.dp)
                 .size(48.dp)

@@ -29,6 +29,13 @@ import androidx.compose.ui.unit.dp
 import com.kyant.capsule.ContinuousCapsule
 import com.nevoit.cresto.ui.theme.glasense.Green500
 
+/**
+ * A custom switch with a glassmorphism-style design.
+ *
+ * @param enabled Controls the enabled state of the switch.
+ * @param checked The current state of the switch.
+ * @param onCheckedChange Callback for when the switch is toggled.
+ */
 @Composable
 fun GlasenseSwitch(
     enabled: Boolean = true,
@@ -41,11 +48,13 @@ fun GlasenseSwitch(
     val elevation = with(density) { 4.dp.toPx() }
     val leftX = startPadding + radius
     val moveDistance = with(density) { 18.dp.toPx() }
+    // Animate the thumb's horizontal offset.
     val thumbOffsetAnimation by animateFloatAsState(
         targetValue = if (checked) moveDistance else 0f,
         animationSpec = spring(.7f, 500f)
     )
 
+    // Animate the track color based on checked and enabled states.
     val trackColorAnimation by animateColorAsState(
         targetValue = when {
             !enabled && checked -> Green500.copy(.5f)
@@ -56,6 +65,7 @@ fun GlasenseSwitch(
         animationSpec = tween(durationMillis = 200),
     )
 
+    // The container for the switch, handles clicks.
     BoxWithConstraints(
         modifier = Modifier
             .height(28.dp)
@@ -70,6 +80,7 @@ fun GlasenseSwitch(
     ) {
         val canvasWidth = constraints.maxWidth.toFloat()
         val canvasHeight = constraints.maxHeight.toFloat()
+        // Custom drawing for the switch.
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawTrack(
                 width = canvasWidth,
@@ -89,6 +100,9 @@ fun GlasenseSwitch(
     }
 }
 
+/**
+ * Draws the switch thumb with a shadow using the native canvas.
+ */
 private fun DrawScope.drawThumbWithShadow(
     centerX: Float,
     centerY: Float,
@@ -122,6 +136,9 @@ private fun DrawScope.drawThumbWithShadow(
     }
 }
 
+/**
+ * Draws the background track for the switch.
+ */
 private fun DrawScope.drawTrack(
     width: Float,
     height: Float,

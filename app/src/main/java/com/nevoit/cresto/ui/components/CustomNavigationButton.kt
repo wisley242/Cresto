@@ -30,6 +30,15 @@ import com.nevoit.cresto.ui.theme.glasense.NavigationButtonActiveColors
 import com.nevoit.cresto.ui.theme.glasense.NavigationButtonNormalColors
 import com.nevoit.cresto.util.g2
 
+/**
+ * A custom navigation button with active and inactive states.
+ *
+ * @param modifier The modifier to be applied to the button.
+ * @param isActive Whether the button is currently active.
+ * @param onClick The callback to be invoked when the button is clicked.
+ * @param backdrop The backdrop layer for the glassmorphism effect.
+ * @param content The content to be displayed inside the button.
+ */
 @Composable
 fun CustomNavigationButton(
     modifier: Modifier = Modifier,
@@ -39,7 +48,9 @@ fun CustomNavigationButton(
     content: @Composable () -> Unit
 ) {
     val isSystemInDarkTheme = isSystemInDarkTheme()
+    // Modifier for drawing the button's background based on its state.
     val finalModifier = if (isActive) {
+        // Active state: draw a simple gradient outline.
         Modifier
             .fillMaxSize()
             .drawBehind {
@@ -64,6 +75,7 @@ fun CustomNavigationButton(
                 }
             }
     } else {
+        // Inactive state: draw a blurred backdrop with different effects for light/dark theme.
         Modifier
             .fillMaxSize()
             .drawPlainBackdrop(
@@ -87,6 +99,7 @@ fun CustomNavigationButton(
                             1.0f to Color.White.copy(alpha = 0.02f)
                         )
                     )
+                    // Light theme inactive style.
                     if (!isSystemInDarkTheme && !isActive) {
                         drawRect(
                             brush = SolidColor(Color(0xFF888888).copy(alpha = 0.7f)),
@@ -116,6 +129,7 @@ fun CustomNavigationButton(
                                 blendMode = BlendMode.Plus
                             )
                         }
+                        // Dark theme inactive style.
                     } else if (isSystemInDarkTheme && !isActive) {
                         drawRect(
                             brush = SolidColor(Color(0xFFFFFFFF).copy(alpha = 0.1f)),
@@ -154,6 +168,7 @@ fun CustomNavigationButton(
             )
     }
 
+    // The base button with shape, click handling, shadow, and colors.
     GlasenseButton(
         shape = ContinuousCapsule(g2),
         onClick = onClick,
@@ -171,6 +186,7 @@ fun CustomNavigationButton(
         colors = if (isActive) NavigationButtonActiveColors.primary() else NavigationButtonNormalColors.primary(),
         animated = false
     ) {
+        // Box to apply the background modifier and center the content.
         Box(modifier = finalModifier, contentAlignment = Alignment.Center) {
             content()
         }

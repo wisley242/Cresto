@@ -16,13 +16,22 @@ import androidx.compose.ui.unit.sp
 import com.kyant.capsule.ContinuousRoundedRectangle
 import com.nevoit.cresto.util.g2
 
+/**
+ * A container composable for configuration items, providing a consistent layout with an optional title and a background.
+ *
+ * @param title An optional title to be displayed above the container.
+ * @param backgroundColor The background color of the main content area.
+ * @param content The composable content to be displayed inside the container.
+ */
 @Composable
 fun ConfigContainer(
     title: String? = null,
     backgroundColor: Color,
     content: @Composable () -> Unit,
 ) {
+    // The main column that holds the optional title and the content box.
     Column(modifier = Modifier.fillMaxWidth()) {
+        // Display the title only if it is not null.
         if (title != null) {
             Text(
                 text = title,
@@ -39,16 +48,19 @@ fun ConfigContainer(
                     .fillMaxWidth()
             )
         }
+        // The main box that contains the content with a specific background and shape.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(color = backgroundColor, shape = ContinuousRoundedRectangle(12.dp, g2))
         ) {
+            // An inner box to provide padding for the content.
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(12.dp)
             ) {
+                // The actual content provided to the composable.
                 content()
             }
         }

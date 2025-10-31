@@ -23,6 +23,18 @@ import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 
+/**
+ * A dynamic small title bar that appears with an animation.
+ * It includes a background with a haze effect and a gradient mask.
+ *
+ * @param modifier The modifier to be applied to the container.
+ * @param title The text to display as the title.
+ * @param statusBarHeight The height of the system status bar.
+ * @param isVisible Whether the title should be visible.
+ * @param hazeState The state for the haze effect.
+ * @param surfaceColor The color of the surface behind the title.
+ * @param content The main content to be displayed below the title bar.
+ */
 @OptIn(ExperimentalHazeApi::class)
 @Composable
 fun DynamicSmallTitle(
@@ -34,11 +46,13 @@ fun DynamicSmallTitle(
     surfaceColor: Color,
     content: @Composable () -> Unit
 ) {
+    // Main container for the title bar and content.
     Box(
         modifier = modifier
             .height(48.dp + statusBarHeight + 48.dp)
             .fillMaxWidth()
     ) {
+        // Animated background with haze and gradient effect.
         CustomAnimatedVisibility(
             visible = isVisible,
             enter = myFadeIn(),
@@ -66,7 +80,9 @@ fun DynamicSmallTitle(
                     )
             ) {}
         }
+        // The primary content of the screen.
         content()
+        // Animated title text.
         CustomAnimatedVisibility(
             visible = isVisible,
             enter = myScaleIn(

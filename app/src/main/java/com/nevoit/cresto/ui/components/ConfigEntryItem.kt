@@ -49,6 +49,18 @@ import com.nevoit.cresto.util.g2
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/**
+ * A composable that represents a single entry item in a configuration or settings screen.
+ * It includes an icon, a title, and an optional forward arrow or switch.
+ *
+ * @param brush An optional Brush to be used as the background for the icon.
+ * @param color An optional Color to be used as the background for the icon. Takes precedence over `brush`.
+ * @param icon The Painter for the icon to be displayed.
+ * @param title The main text label for the configuration item.
+ * @param isSwitch If true, the forward arrow is hidden, implying a switch might be placed here. Defaults to false.
+ * @param enableGlow If true, a glow effect is added to the icon. Defaults to false.
+ * @param onClick The lambda function to be executed when the item is clicked.
+ */
 @Composable
 fun ConfigEntryItem(
     brush: Brush? = null,
@@ -59,14 +71,18 @@ fun ConfigEntryItem(
     enableGlow: Boolean? = false,
     onClick: () -> Unit
 ) {
+    // Interaction source to track press state.
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    // State for managing the alpha value for press animations.
     var alphaValue by remember { mutableFloatStateOf(1f) }
     val animatedAlphaValue by animateFloatAsState(
         targetValue = alphaValue,
         animationSpec = tween(200)
     )
     val scope = rememberCoroutineScope()
+
+    // Animate alpha on press and release.
     LaunchedEffect(isPressed) {
         alphaValue = if (isPressed) {
             0.5f
@@ -74,12 +90,15 @@ fun ConfigEntryItem(
             1f
         }
     }
+
+    // The main row layout for the item.
     Row(
         modifier = Modifier
-            .graphicsLayer { alpha = animatedAlphaValue }
+            .graphicsLayer { alpha = animatedAlphaValue } // Apply the alpha animation.
             .clickable(
                 enabled = true,
                 onClick = {
+                    // Custom click feedback animation.
                     scope.launch {
                         alphaValue = 0.5f
                         delay(400)
@@ -88,15 +107,17 @@ fun ConfigEntryItem(
                     onClick()
                 },
                 interactionSource = interactionSource,
-                indication = null
+                indication = null // Disable default ripple effect.
             )
             .fillMaxWidth()
             .height(40.dp)
     ) {
+        // Box to contain the icon with its background and optional glow.
         Box(
             modifier = Modifier
                 .size(40.dp)
                 .then(
+                    // Apply brush or color background if provided.
                     if (brush != null) Modifier.background(
                         brush = brush,
                         shape = CircleShape
@@ -107,6 +128,7 @@ fun ConfigEntryItem(
                 ),
             contentAlignment = Alignment.Center
         ) {
+            // Optional glow effect for the icon.
             if (enableGlow == true) {
                 Icon(
                     painter = icon,
@@ -118,6 +140,7 @@ fun ConfigEntryItem(
                         .blur(2.dp)
                 )
             }
+            // The main icon.
             Icon(
                 painter = icon,
                 tint = Color.White,
@@ -128,6 +151,7 @@ fun ConfigEntryItem(
             )
         }
         Spacer(modifier = Modifier.width(12.dp))
+        // The title text.
         Text(
             text = title,
             style = MaterialTheme.typography.bodyMedium,
@@ -136,6 +160,7 @@ fun ConfigEntryItem(
                 .align(Alignment.CenterVertically)
         )
         Spacer(modifier = Modifier.width(12.dp))
+        // Display a forward arrow if it's not a switch item.
         if (isSwitch == null || !isSwitch) {
             Icon(
                 painter = painterResource(R.drawable.ic_forward),
@@ -150,13 +175,22 @@ fun ConfigEntryItem(
     }
 }
 
+/**
+ * A composable that represents an entry item specifically for "About" screen
+ * It displays the app icon, name, developer info, and version.
+ *
+ * @param icon The Painter for the app icon.
+ * @param onClick The lambda function to be executed when the item is clicked.
+ */
 @Composable
 fun AboutEntryItem(
     icon: Painter,
     onClick: () -> Unit
 ) {
+    // Interaction source to track press state.
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    // State for managing the alpha value for press animations.
     var alphaValue by remember { mutableFloatStateOf(1f) }
     val animatedAlphaValue by animateFloatAsState(
         targetValue = alphaValue,
@@ -166,6 +200,7 @@ fun AboutEntryItem(
 
     val context = LocalContext.current
 
+    // Retrieve package information to get the app version name.
     val packageInfo: PackageInfo? = remember {
         try {
             val packageName = context.packageName
@@ -175,6 +210,8 @@ fun AboutEntryItem(
             null
         }
     }
+
+    // Animate alpha on press and release.
     LaunchedEffect(isPressed) {
         alphaValue = if (isPressed) {
             0.5f
@@ -182,13 +219,15 @@ fun AboutEntryItem(
             1f
         }
     }
+    // The main row layout for the item.
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .graphicsLayer { alpha = animatedAlphaValue }
+            .graphicsLayer { alpha = animatedAlphaValue } // Apply the alpha animation.
             .clickable(
                 enabled = true,
                 onClick = {
+                    // Custom click feedback animation.
                     scope.launch {
                         alphaValue = 0.5f
                         delay(400)
@@ -197,10 +236,11 @@ fun AboutEntryItem(
                     onClick()
                 },
                 interactionSource = interactionSource,
-                indication = null
+                indication = null // Disable default ripple effect.
             )
             .fillMaxWidth()
     ) {
+        // Box containing the app icon.
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -209,6 +249,7 @@ fun AboutEntryItem(
             Image(painter = icon, contentDescription = "App Icon")
         }
         Spacer(modifier = Modifier.width(12.dp))
+        // Column for the app information text.
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -236,6 +277,7 @@ fun AboutEntryItem(
             )
         }
         Spacer(modifier = Modifier.width(12.dp))
+        // Forward arrow icon.
         Icon(
             painter = painterResource(R.drawable.ic_forward),
             tint = MaterialTheme.colorScheme.onBackground.copy(.2f),
