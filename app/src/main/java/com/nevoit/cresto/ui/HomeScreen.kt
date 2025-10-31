@@ -28,7 +28,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -53,30 +52,23 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionOnScreen
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kyant.capsule.ContinuousCapsule
 import com.kyant.capsule.ContinuousRoundedRectangle
-import com.nevoit.cresto.CrestoApplication
 import com.nevoit.cresto.R
-import com.nevoit.cresto.data.TodoItem
-import com.nevoit.cresto.ui.components.BottomSheet
 import com.nevoit.cresto.ui.components.DynamicSmallTitle
 import com.nevoit.cresto.ui.components.GlasenseButton
 import com.nevoit.cresto.ui.components.GlasenseButtonAdaptable
 import com.nevoit.cresto.ui.components.PageHeader
 import com.nevoit.cresto.ui.components.SwipeableTodoItem
-import com.nevoit.cresto.ui.components.WindowManagerComposable
 import com.nevoit.cresto.ui.menu.MenuItemData
 import com.nevoit.cresto.ui.theme.glasense.Blue500
 import com.nevoit.cresto.ui.theme.glasense.CalculatedColor
 import com.nevoit.cresto.ui.theme.glasense.Red500
-import com.nevoit.cresto.util.deviceCornerShape
 import com.nevoit.cresto.util.g2
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.hazeSource
@@ -86,23 +78,17 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeApi::class)
 @Composable
 fun HomeScreen(
-    showMenu: (anchorPosition: androidx.compose.ui.geometry.Offset, items: List<MenuItemData>) -> Unit
+    showMenu: (anchorPosition: androidx.compose.ui.geometry.Offset, items: List<MenuItemData>) -> Unit,
+    viewModel: TodoViewModel
 ) {
     val scope = rememberCoroutineScope()
 
-    val application = LocalContext.current.applicationContext as CrestoApplication
 
-    val viewModel: TodoViewModel = viewModel(
-        factory = TodoViewModelFactory(application.repository)
-    )
     val todoList by viewModel.allTodos.collectAsStateWithLifecycle()
     val revealedItemId by viewModel.revealedItemId.collectAsState()
     val selectedItemIds by viewModel.selectedItemIds.collectAsState()
     val isSelectionModeActive by viewModel.isSelectionModeActive.collectAsState()
     val selectedItemCount by viewModel.selectedItemCount.collectAsState()
-
-    var showSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState()
 
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val density = LocalDensity.current
@@ -380,7 +366,7 @@ fun HomeScreen(
                 GlasenseButton(
                     enabled = true,
                     shape = CircleShape,
-                    onClick = { showSheet = true },
+                    onClick = { viewModel.showBottomSheet() },
                     modifier = Modifier
                         .blur(
                             targetBlurRadius.dp - topBarBlurAnimation.value.dp,
@@ -457,32 +443,6 @@ fun HomeScreen(
                     contentDescription = "Exit selection mode",
                     modifier = Modifier.width(32.dp)
                 )
-            }
-        }
-        if (showSheet) {
-            WindowManagerComposable(
-                visible = true,
-                onDismissRequest = { showSheet = false }) {
-                BottomSheet(
-                    shape = deviceCornerShape(
-                        bottomLeft = false,
-                        bottomRight = false
-                    ),
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    onDismiss = { showSheet = false },
-                    onAddClick = { title, flagIndex, finalDate ->
-                        scope.launch {
-                            sheetState.hide()
-                        }.invokeOnCompletion {
-                            viewModel.insert(
-                                TodoItem(
-                                    title = title,
-                                    flag = flagIndex,
-                                    dueDate = finalDate
-                                )
-                            )
-                        }
-                    })
             }
         }
     }

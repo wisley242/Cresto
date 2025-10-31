@@ -12,7 +12,8 @@ import com.nevoit.cresto.ui.menu.MenuItemData
 @Composable
 fun AppNavHost(
     navController: NavHostController,
-    showMenu: (anchorPosition: androidx.compose.ui.geometry.Offset, items: List<MenuItemData>) -> Unit
+    showMenu: (anchorPosition: androidx.compose.ui.geometry.Offset, items: List<MenuItemData>) -> Unit,
+    viewModel: TodoViewModel
 ) {
     val fadeDuration = 0
     NavHost(
@@ -28,7 +29,7 @@ fun AppNavHost(
                 fadeOut(animationSpec = tween(fadeDuration))
             }
         ) {
-            HomeScreen(showMenu = showMenu)
+            HomeScreen(showMenu = showMenu, viewModel = viewModel)
         }
 
         composable(

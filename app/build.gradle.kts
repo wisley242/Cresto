@@ -1,3 +1,21 @@
+import java.io.FileInputStream
+import java.util.Locale
+import java.util.Properties
+
+fun getVersionProps(project: Project): Properties {
+    val versionPropsFile = project.file("version.properties")
+    if (!versionPropsFile.canRead()) {
+        throw GradleException("Could not read version.properties!")
+    }
+    return Properties().apply {
+        load(FileInputStream(versionPropsFile))
+    }
+}
+
+val versionProps = getVersionProps(project)
+val vCode = versionProps["VERSION_CODE"].toString().toInt()
+val vName = versionProps["VERSION_NAME"].toString()
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -16,8 +34,8 @@ android {
         applicationId = "com.nevoit.cresto"
         minSdk = 31
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = vCode
+        versionName = vName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
@@ -96,4 +114,27 @@ dependencies {
     implementation("com.tencent:mmkv:2.2.4")
     implementation("io.github.kyant0:capsule:2.1.1")
     implementation("io.github.kyant0:backdrop:1.0.0")
+}
+
+tasks.register("incrementVersionCode") {
+    doLast {
+        val props = getVersionProps(project)
+        val currentCode = props["VERSION_CODE"].toString().toInt()
+        val newCode = currentCode + 1
+        props["VERSION_CODE"] = newCode.toString()
+
+        val versionPropsFile = project.file("version.properties")
+        versionPropsFile.writer().use { writer ->
+            props.store(writer, "Version properties updated")
+        }
+        println("Version code incremented to $newCode")
+    }
+}
+
+tasks.whenTaskAdded {
+    if (name.contains("assemble") || name.contains("bundle")) {
+        if (name.lowercase(Locale.getDefault()).contains("release")) {
+            dependsOn("incrementVersionCode")
+        }
+    }
 }

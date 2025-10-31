@@ -17,6 +17,10 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+data class BottomSheetUiState(
+    val isVisible: Boolean = false
+)
+
 class TodoViewModel(private val repository: TodoRepository) : ViewModel() {
     val allTodos: StateFlow<List<TodoItem>> = repository.allTodos.stateIn(
         scope = viewModelScope,
@@ -130,6 +134,17 @@ class TodoViewModel(private val repository: TodoRepository) : ViewModel() {
                 println("Error inserting AI-generated todos: ${e.message}")
             }
         }
+    }
+
+    private val _bottomSheetState = MutableStateFlow(BottomSheetUiState())
+    val bottomSheetState = _bottomSheetState.asStateFlow()
+
+    fun showBottomSheet() {
+        _bottomSheetState.update { it.copy(isVisible = true) }
+    }
+
+    fun hideBottomSheet() {
+        _bottomSheetState.update { it.copy(isVisible = false) }
     }
 }
 

@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,14 +28,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.nevoit.cresto.CrestoApplication
 import com.nevoit.cresto.R
+import com.nevoit.cresto.data.TodoItem
+import com.nevoit.cresto.ui.components.BottomSheet
 import com.nevoit.cresto.ui.components.CustomNavigationButton
 import com.nevoit.cresto.ui.gaussiangradient.smoothGradientMask
 import com.nevoit.cresto.ui.gaussiangradient.smoothGradientMaskFallback
@@ -84,10 +90,18 @@ fun TodoScreen() {
 
     val density = LocalDensity.current
     val interactionSource = remember { MutableInteractionSource() }
+
+
+    val application = LocalContext.current.applicationContext as CrestoApplication
+    val viewModel: TodoViewModel = viewModel(
+        factory = TodoViewModelFactory(application.repository)
+    )
+
+    val bottomSheetState by viewModel.bottomSheetState.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-
     ) {
         Box(
             modifier = Modifier
@@ -98,7 +112,8 @@ fun TodoScreen() {
         ) {
             AppNavHost(
                 navController = navController,
-                showMenu = showMenu
+                showMenu = showMenu,
+                viewModel = viewModel
             )
         }
 
@@ -255,6 +270,21 @@ fun TodoScreen() {
                 alphaAni = { alphaAni.value },
                 scaleAni = { scaleAni.value }
             )
+        }
+        if (bottomSheetState.isVisible) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                BottomSheet(
+                    onDismiss = { viewModel.hideBottomSheet() },
+                    onAddClick = { title, flagIndex, finalDate ->
+                        viewModel.insert(
+                            TodoItem(
+                                title = title,
+                                flag = flagIndex,
+                                dueDate = finalDate
+                            )
+                        )
+                    })
+            }
         }
     }
 }

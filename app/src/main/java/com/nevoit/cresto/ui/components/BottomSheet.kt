@@ -1,5 +1,6 @@
 package com.nevoit.cresto.ui.components
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -37,15 +38,14 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import com.nevoit.cresto.util.deviceCornerShape
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BottomSheet(
-    containerColor: Color,
     onDismiss: () -> Unit,
-    shape: Shape,
     onAddClick: (String, Int, LocalDate?) -> Unit
 ) {
     var columnHeightPx by remember { mutableIntStateOf(0) }
@@ -54,6 +54,7 @@ fun BottomSheet(
 
     val scope = rememberCoroutineScope()
     var navigationBarHeight by remember { mutableIntStateOf(0) }
+
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -76,6 +77,7 @@ fun BottomSheet(
                 )
             )
         }
+        Log.d("BOTTOM", "$columnHeightPx")
     }
     Box(modifier = Modifier.fillMaxSize()) {
         CustomAnimatedVisibility(
@@ -146,8 +148,11 @@ fun BottomSheet(
                         columnHeightPx = size.height
                     }
                     .background(
-                        shape = shape,
-                        color = containerColor
+                        shape = deviceCornerShape(
+                            bottomLeft = false,
+                            bottomRight = false
+                        ),
+                        color = MaterialTheme.colorScheme.surface
                     )
                     .fillMaxWidth()
             ) {
@@ -158,7 +163,7 @@ fun BottomSheet(
                             targetValue = (columnHeightPx + navigationBarHeight).toFloat(),
                             animationSpec = tween(
                                 durationMillis = 200,
-                                delayMillis = 100,
+                                delayMillis = if (isImeVisible) 100 else 0,
                                 easing = FastOutSlowInEasing
                             )
                         )
@@ -186,7 +191,7 @@ fun BottomSheet(
                     .onSizeChanged { size ->
                         navigationBarHeight = size.height
                     }
-                    .background(color = containerColor)
+                    .background(color = MaterialTheme.colorScheme.surface)
                     .windowInsetsPadding(WindowInsets.navigationBars)
                     .imePadding()
                     .fillMaxWidth()

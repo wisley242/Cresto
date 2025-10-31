@@ -1,7 +1,5 @@
 package com.nevoit.cresto.ui.components
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -61,7 +59,6 @@ enum class SelectedButton {
     DUE_DATE, FLAG, HASHTAG, NONE
 }
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun AddTodoSheet(
     onAddClick: (String, Int, LocalDate?) -> Unit,
